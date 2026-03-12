@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Env and secrets (never commit)
+.env
+.env.local
+.env.*.local
+keys.json
+
+# Supabase
+.supabase/
+
+# Next.js
+.next/
+out/
+build/
+
+# Debug / IDE
+.idea/
+.vscode/
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
