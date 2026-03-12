@@ -8,7 +8,19 @@ const ADMIN_ROLES = ["owner", "admin"];
 function getBaseUrl(request: NextRequest): string {
   const env = process.env.NEXT_PUBLIC_APP_URL;
   if (env) return env.replace(/\/$/, "");
-  return request.nextUrl.origin;
+
+  const origin = request.nextUrl.origin;
+  const isLocalhost =
+    origin.startsWith("http://localhost") || origin.startsWith("http://127.0.0.1");
+  if (isLocalhost) {
+    const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host");
+    const proto = request.headers.get("x-forwarded-proto");
+    if (host) {
+      const scheme = proto === "https" ? "https" : "http";
+      return `${scheme}://${host}`.replace(/\/$/, "");
+    }
+  }
+  return origin;
 }
 
 export async function middleware(request: NextRequest) {

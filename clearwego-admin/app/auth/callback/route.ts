@@ -5,7 +5,19 @@ import { NextResponse } from "next/server";
 function getBaseUrl(request: Request): string {
   const env = process.env.NEXT_PUBLIC_APP_URL;
   if (env) return env.replace(/\/$/, "");
-  return new URL(request.url).origin;
+
+  const origin = new URL(request.url).origin;
+  const isLocalhost =
+    origin.startsWith("http://localhost") || origin.startsWith("http://127.0.0.1");
+  if (isLocalhost) {
+    const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host");
+    const proto = request.headers.get("x-forwarded-proto");
+    if (host) {
+      const scheme = proto === "https" ? "https" : "http";
+      return `${scheme}://${host}`.replace(/\/$/, "");
+    }
+  }
+  return origin;
 }
 
 export async function GET(request: Request) {

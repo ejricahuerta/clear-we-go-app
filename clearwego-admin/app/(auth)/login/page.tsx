@@ -28,7 +28,15 @@ export default function LoginPage() {
         return;
       }
       router.refresh();
-      router.push("/");
+      // Use canonical app URL so redirect stays on production (e.g. admin.clearwego.ca), not localhost
+      const base =
+        typeof process.env.NEXT_PUBLIC_APP_URL === "string" && process.env.NEXT_PUBLIC_APP_URL
+          ? process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "")
+          : typeof window !== "undefined"
+            ? window.location.origin
+            : "";
+      if (base) window.location.href = `${base}/`;
+      else router.push("/");
     } finally {
       setLoading(false);
     }
