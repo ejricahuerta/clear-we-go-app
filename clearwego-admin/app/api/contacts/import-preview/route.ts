@@ -16,8 +16,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "rows array required" }, { status: 400 });
   }
 
-  const emails = [...new Set(rows.map((r) => (r.email ?? "").toLowerCase().trim()).filter(Boolean))];
-  const phones = [...new Set(rows.map((r) => (r.phone ?? "").trim()).filter(Boolean))];
+  const emails = Array.from(new Set(rows.map((r) => (r.email ?? "").toLowerCase().trim()).filter(Boolean)));
+  const phones = Array.from(new Set(rows.map((r) => (r.phone ?? "").trim()).filter(Boolean)));
 
   let existingEmails = new Set<string>();
   if (emails.length > 0) {

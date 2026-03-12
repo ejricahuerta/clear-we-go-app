@@ -33,9 +33,11 @@ export default function NewProjectPage() {
       .then((data) => {
         if (data.error) throw new Error(data.error);
         setClients(data.clients ?? []);
-        if (data.clients?.length && !clientId) setClientId(data.clients[0].id);
+        if (data.clients?.length) setClientId((prev) => prev || data.clients[0].id);
       })
       .catch(() => setClients([]));
+    // Intentionally run once on mount to load clients and set initial selection
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSubmit = (e: React.FormEvent) => {

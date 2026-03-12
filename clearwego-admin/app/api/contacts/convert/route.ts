@@ -36,7 +36,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Contact not found" }, { status: 404 });
   }
 
-  if (contact.found_via === undefined) (contact as { found_via?: string }).found_via = null;
+  if (contact.found_via === undefined) (contact as { found_via?: string | null }).found_via = null;
 
   const { data: newClient, error: clientError } = await supabase
     .from("clients")

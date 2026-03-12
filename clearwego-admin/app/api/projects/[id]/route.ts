@@ -40,6 +40,7 @@ export async function GET(
   }
 
   const client = Array.isArray(project.clients) ? project.clients[0] : project.clients;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- omit clients from response
   const { clients, ...rest } = project as { clients?: unknown } & Record<string, unknown>;
   return NextResponse.json({
     ...rest,

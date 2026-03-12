@@ -58,7 +58,6 @@ export default function ProjectDetailPage() {
   const params = useParams();
   const id = params.id as string;
   const [project, setProject] = useState<Project | null>(null);
-  const [details, setDetails] = useState<Record<string, string>>({});
   const [access, setAccess] = useState<Record<string, unknown>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -67,13 +66,11 @@ export default function ProjectDetailPage() {
   const load = useCallback(() => {
     Promise.all([
       fetch(`/api/projects/${id}`).then((r) => r.json()),
-      fetch(`/api/projects/${id}/details`).then((r) => r.json()).catch(() => ({ details: {} })),
       fetch(`/api/projects/${id}/access`).then((r) => r.json()).catch(() => ({ access: null })),
     ])
-      .then(([projData, detailsData, accessData]) => {
+      .then(([projData, accessData]) => {
         if (projData.error) throw new Error(projData.error);
         setProject(projData);
-        setDetails(detailsData.details ?? {});
         setAccess(accessData.access ?? {});
       })
       .catch(() => setProject(null))

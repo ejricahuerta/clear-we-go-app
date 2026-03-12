@@ -64,9 +64,9 @@ function mapTitleToType(title: string): string {
 }
 
 export default function ImportContactsPage() {
-  const [file, setFile] = useState<File | null>(null);
+  const [, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<PreviewRow[]>([]);
-  const [duplicateCount, setDuplicateCount] = useState(0);
+  const [, setDuplicateCount] = useState(0);
   const [importing, setImporting] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
