@@ -37,10 +37,16 @@ export default function LoginPage() {
   async function handleGoogle() {
     setError(null);
     const supabase = createClient();
-    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    // Use canonical app URL in production so Supabase redirects back to admin.clearwego.ca, not localhost
+    const base =
+      typeof process.env.NEXT_PUBLIC_APP_URL === "string" && process.env.NEXT_PUBLIC_APP_URL
+        ? process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "")
+        : typeof window !== "undefined"
+          ? window.location.origin
+          : "";
     const { error: err } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${origin}/auth/callback` },
+      options: { redirectTo: `${base}/auth/callback` },
     });
     if (err) setError(err.message);
   }
