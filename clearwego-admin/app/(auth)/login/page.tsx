@@ -5,12 +5,24 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 
+/** Detect in-app browsers (e.g. Messenger, Instagram) where Google blocks OAuth (403 disallowed_useragent). */
+function isLikelyInAppBrowser(): boolean {
+  if (typeof navigator === "undefined" || !navigator.userAgent) return false;
+  const ua = navigator.userAgent.toLowerCase();
+  const inAppPatterns = [
+    "fbav", "fban", "facebook", "messenger", "instagram", "line/", "twitter", "snapchat",
+    "webview", "; wv)", "; wv;",
+  ];
+  return inAppPatterns.some((p) => ua.includes(p));
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showOpenInBrowser, setShowOpenInBrowser] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -44,8 +56,12 @@ export default function LoginPage() {
 
   async function handleGoogle() {
     setError(null);
+    setShowOpenInBrowser(false);
+    if (isLikelyInAppBrowser()) {
+      setShowOpenInBrowser(true);
+      return;
+    }
     const supabase = createClient();
-    // Use canonical app URL in production so Supabase redirects back to admin.clearwego.ca, not localhost
     const base =
       typeof process.env.NEXT_PUBLIC_APP_URL === "string" && process.env.NEXT_PUBLIC_APP_URL
         ? process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "")
@@ -57,6 +73,13 @@ export default function LoginPage() {
       options: { redirectTo: `${base}/auth/callback` },
     });
     if (err) setError(err.message);
+  }
+
+  function copyLoginLink() {
+    const url = typeof window !== "undefined" ? window.location.href : "";
+    if (url && navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(url);
+    }
   }
 
   return (
@@ -110,6 +133,25 @@ export default function LoginPage() {
         <Button type="button" variant="outline" className="w-full" onClick={handleGoogle} disabled={loading}>
           Sign in with Google
         </Button>
+
+        {showOpenInBrowser && (
+          <div className="rounded-lg border border-amber-500/50 bg-amber-500/10 p-4 space-y-3 text-sm">
+            <p className="font-medium text-amber-700 dark:text-amber-400">
+              Google sign-in doesn&apos;t work in this browser
+            </p>
+            <p className="text-muted-foreground">
+              Open this page in <strong>Safari</strong> or <strong>Chrome</strong> and try &quot;Sign in with Google&quot; again.
+            </p>
+            <div className="flex flex-col gap-2">
+              <Button type="button" variant="secondary" size="sm" className="w-full" onClick={copyLoginLink}>
+                Copy login link
+              </Button>
+              <p className="text-xs text-muted-foreground break-all">
+                {typeof window !== "undefined" ? window.location.href : ""}
+              </p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

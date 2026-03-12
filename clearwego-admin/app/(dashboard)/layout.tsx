@@ -11,7 +11,7 @@ export default function DashboardLayout({
   return (
     <SidebarProvider>
       <AppSidebar />
-      <SidebarInset className="min-w-0">
+      <SidebarInset className="min-w-0 overflow-x-hidden">
         <DashboardHeader />
         <AnimatedPageContent>{children}</AnimatedPageContent>
       </SidebarInset>

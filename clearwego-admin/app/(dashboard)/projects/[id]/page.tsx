@@ -59,6 +59,13 @@ export default function ProjectDetailPage() {
   const id = params.id as string;
   const [project, setProject] = useState<Project | null>(null);
   const [access, setAccess] = useState<Record<string, unknown>>({});
+  const [crewData, setCrewData] = useState<{
+    crew: { id: string; name: string; email: string }[];
+    available: { id: string; name: string; email: string }[];
+    all: { id: string; name: string; email: string; assigned: boolean }[];
+  } | null>(null);
+  const [selectedCrewIds, setSelectedCrewIds] = useState<Set<string>>(new Set());
+  const [crewSaving, setCrewSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [stageChanging, setStageChanging] = useState(false);
@@ -67,11 +74,20 @@ export default function ProjectDetailPage() {
     Promise.all([
       fetch(`/api/projects/${id}`).then((r) => r.json()),
       fetch(`/api/projects/${id}/access`).then((r) => r.json()).catch(() => ({ access: null })),
+      fetch(`/api/projects/${id}/crew`).then((r) => r.json()).catch(() => ({ crew: [], available: [], all: [] })),
     ])
-      .then(([projData, accessData]) => {
+      .then(([projData, accessData, crewResp]) => {
         if (projData.error) throw new Error(projData.error);
         setProject(projData);
         setAccess(accessData.access ?? {});
+        if (crewResp.crew !== undefined) {
+          setCrewData({
+            crew: crewResp.crew ?? [],
+            available: crewResp.available ?? [],
+            all: crewResp.all ?? [],
+          });
+          setSelectedCrewIds(new Set((crewResp.crew ?? []).map((c: { id: string }) => c.id)));
+        }
       })
       .catch(() => setProject(null))
       .finally(() => setLoading(false));
@@ -111,6 +127,31 @@ export default function ProjectDetailPage() {
       })
       .catch(console.error)
       .finally(() => setSaving(false));
+  };
+
+  const handleCrewToggle = (userId: string, assigned: boolean) => {
+    setSelectedCrewIds((prev) => {
+      const next = new Set(prev);
+      if (assigned) next.delete(userId);
+      else next.add(userId);
+      return next;
+    });
+  };
+
+  const handleSaveCrew = () => {
+    setCrewSaving(true);
+    fetch(`/api/projects/${id}/crew`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_ids: Array.from(selectedCrewIds) }),
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.error) throw new Error(data.error);
+        load();
+      })
+      .catch(console.error)
+      .finally(() => setCrewSaving(false));
   };
 
   const handleSaveAccess = () => {
@@ -416,10 +457,52 @@ export default function ProjectDetailPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="crew">
+        <TabsContent value="crew" className="space-y-4">
           <Card>
-            <CardContent className="pt-6">
-              <p className="text-muted-foreground">Crew assignment (Task 17).</p>
+            <CardHeader>
+              <CardTitle className="text-base">Crew assignment</CardTitle>
+              <CardDescription>Assign crew members to this job. Save to apply.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {crewData ? (
+                <>
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">Assigned ({selectedCrewIds.size})</p>
+                    {crewData.all.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">No crew members yet. Invite crew from Team.</p>
+                    ) : (
+                      <ul className="space-y-1.5">
+                        {crewData.all.map((member) => {
+                          const assigned = selectedCrewIds.has(member.id);
+                          return (
+                            <li
+                              key={member.id}
+                              className="flex items-center justify-between rounded-md border px-3 py-2 text-sm"
+                            >
+                              <span className="font-medium">{member.name}</span>
+                              <span className="text-muted-foreground truncate ml-2">{member.email}</span>
+                              <Button
+                                type="button"
+                                variant={assigned ? "secondary" : "outline"}
+                                size="sm"
+                                className="shrink-0 ml-2"
+                                onClick={() => handleCrewToggle(member.id, assigned)}
+                              >
+                                {assigned ? "Remove" : "Add"}
+                              </Button>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                  </div>
+                  <Button onClick={handleSaveCrew} disabled={crewSaving || crewData.all.length === 0}>
+                    {crewSaving ? "Saving..." : "Save crew"}
+                  </Button>
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground">Loading crew…</p>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

@@ -29,19 +29,19 @@ export function DashboardHeader() {
   const label = SEGMENTS[first] ?? (first ? first.charAt(0).toUpperCase() + first.slice(1) : "Home");
 
   return (
-    <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
-      <SidebarTrigger className="-ml-1" />
-      <Separator orientation="vertical" className="mr-2 h-4" />
+    <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-2 border-b bg-background px-3 md:h-16 md:px-4">
+      <SidebarTrigger className="-ml-1 size-9 min-w-9 touch-manipulation md:size-7 md:min-w-7" aria-label="Open menu" />
+      <Separator orientation="vertical" className="mr-2 h-4 hidden sm:block" />
       <Breadcrumb>
-        <BreadcrumbList>
+        <BreadcrumbList className="min-w-0">
           {!first && (
             <BreadcrumbItem>
-              <BreadcrumbPage>Home</BreadcrumbPage>
+              <BreadcrumbPage className="truncate">Home</BreadcrumbPage>
             </BreadcrumbItem>
           )}
           {first && !second && (
             <BreadcrumbItem>
-              <BreadcrumbPage>{label}</BreadcrumbPage>
+              <BreadcrumbPage className="truncate">{label}</BreadcrumbPage>
             </BreadcrumbItem>
           )}
           {first && second && (
@@ -53,7 +53,7 @@ export function DashboardHeader() {
               </BreadcrumbItem>
               <BreadcrumbSeparator className="hidden md:block" />
               <BreadcrumbItem>
-                <BreadcrumbPage>
+                <BreadcrumbPage className="truncate">
                   {second === "new" ? "New" : second === "import" ? "Import" : "Details"}
                 </BreadcrumbPage>
               </BreadcrumbItem>

@@ -11,7 +11,7 @@ export function AnimatedPageContent({
   return (
     <div
       key={pathname}
-      className="flex min-w-0 flex-1 flex-col gap-4 overflow-x-hidden p-4"
+      className="flex min-w-0 flex-1 flex-col gap-4 overflow-x-hidden p-3 md:p-4"
     >
       {children}
     </div>
