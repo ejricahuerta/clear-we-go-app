@@ -57,7 +57,8 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const projects = (rows ?? []).map((p: { clients?: { first_name: string; last_name: string } | null } & Record<string, unknown>) => {
+  type Row = Record<string, unknown> & { clients?: { first_name: string; last_name: string }[] | { first_name: string; last_name: string } | null };
+  const projects = (rows ?? []).map((p: Row) => {
     const { clients, ...rest } = p;
     const client = Array.isArray(clients) ? clients[0] : clients;
     return {
