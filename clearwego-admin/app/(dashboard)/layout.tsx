@@ -1,4 +1,7 @@
+import { AnimatedPageContent } from "@/components/animated-page-content";
 import { AppSidebar } from "@/components/app-sidebar";
+import { DashboardHeader } from "@/components/dashboard-header";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
 export default function DashboardLayout({
   children,
@@ -6,11 +9,12 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen">
+    <SidebarProvider>
       <AppSidebar />
-      <main className="flex-1 overflow-auto">
-        {children}
-      </main>
-    </div>
+      <SidebarInset className="min-w-0">
+        <DashboardHeader />
+        <AnimatedPageContent>{children}</AnimatedPageContent>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }

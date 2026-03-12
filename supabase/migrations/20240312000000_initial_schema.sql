@@ -1,4 +1,4 @@
--- Clear We Go — Initial schema (docs/02-database-schema.md)
+-- Clear We Go  - Initial schema (docs/02-database-schema.md)
 -- Run in order: tables, then RLS, then policies.
 -- This migration: tables only. RLS enabled in next migration.
 
@@ -153,7 +153,7 @@ CREATE TABLE public.crew_assignments (
 );
 
 -- =============================================================================
--- TIMELINE (append-only; no update/delete — enforced by trigger)
+-- TIMELINE (append-only; no update/delete  - enforced by trigger)
 -- =============================================================================
 CREATE TABLE public.timeline_events (
   id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),

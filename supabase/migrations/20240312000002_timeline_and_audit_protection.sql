@@ -1,4 +1,4 @@
--- Clear We Go — Append-only timeline_events; audit_log no deletes (docs/02, 03)
+-- Clear We Go  - Append-only timeline_events; audit_log no deletes (docs/02, 03)
 
 -- timeline_events: no UPDATE or DELETE ever (append-only)
 CREATE OR REPLACE FUNCTION public.prevent_timeline_events_update_delete()

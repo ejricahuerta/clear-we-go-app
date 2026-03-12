@@ -1,4 +1,4 @@
-# 05 — Clients and Timeline
+# 05  - Clients and Timeline
 
 ## What is a Client
 A client is a converted contact or direct inquiry
@@ -21,7 +21,7 @@ who has at least one project associated with them.
 
 ### Rules
 - Append only. No edits. No deletes. Ever.
-- Every event logged automatically — no manual logging required
+- Every event logged automatically  - no manual logging required
 - Every event has exact timestamp, who did it, what happened
 
 ### Display
@@ -85,7 +85,7 @@ Branded Clear We Go PDF with all photos included.
 | client_note_added | "Note added by [name]: [preview]" |
 | client_sms_opted_out | "Client opted out of SMS" |
 
-### Project Events — Stage Changes
+### Project Events  - Stage Changes
 | Event Type | Description |
 |-----------|-------------|
 | project_created | "Project created by [name]: [service type] at [address]" |
@@ -100,7 +100,7 @@ Branded Clear We Go PDF with all photos included.
 |-----------|-------------|
 | crew_assigned | "Crew assigned: [crew name] by [admin name]" |
 | crew_unassigned | "Crew removed: [crew name] by [admin name]" |
-| crew_notified | "SMS sent to [crew name] — job assignment" |
+| crew_notified | "SMS sent to [crew name]  - job assignment" |
 | crew_reminded | "SMS reminder sent to [crew name]" |
 | project_started | "[Crew name] started the project at [time]" |
 | checklist_item_completed | "[Crew name] completed: [item]" |
@@ -175,7 +175,7 @@ Branded Clear We Go PDF with all photos included.
 | invoice_generated | "Invoice [CWG-XXXX] generated: $[amount]" |
 | invoice_sent | "Invoice sent to client via [method]" |
 | invoice_viewed | "Client viewed invoice" |
-| invoice_overdue | "Invoice overdue — [n] days past due" |
+| invoice_overdue | "Invoice overdue  - [n] days past due" |
 | receipt_generated | "Receipt [CWG-R-XXXX] generated" |
 | receipt_sent | "Receipt sent to client" |
 

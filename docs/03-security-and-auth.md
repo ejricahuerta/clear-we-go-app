@@ -1,8 +1,8 @@
-# 03 — Security and Auth
+# 03  - Security and Auth
 
 ## Authentication
 
-### Admin App (app.clearwego.ca)
+### Admin App (admin.clearwego.ca)
 - Owner: Google OAuth only
 - Admin: Email/password only
 - Session expires after 8 hours of inactivity

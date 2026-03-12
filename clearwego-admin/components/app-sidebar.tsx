@@ -4,11 +4,32 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import { cn } from "@/lib/utils";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+} from "@/components/ui/sidebar";
+import {
+  HomeIcon,
+  UsersIcon,
+  Building2Icon,
+  FolderKanbanIcon,
+  UserPlusIcon,
+  LogOutIcon,
+} from "lucide-react";
 
 const nav = [
-  { href: "/", label: "Home" },
-  { href: "/team", label: "Team" },
+  { href: "/", label: "Home", icon: HomeIcon },
+  { href: "/contacts", label: "Contacts", icon: UsersIcon },
+  { href: "/clients", label: "Clients", icon: Building2Icon },
+  { href: "/projects", label: "Projects", icon: FolderKanbanIcon },
+  { href: "/team", label: "Team", icon: UserPlusIcon },
 ];
 
 export function AppSidebar() {
@@ -23,41 +44,56 @@ export function AppSidebar() {
   }
 
   return (
-    <aside className="w-56 shrink-0 border-r border-border bg-muted/30 flex flex-col min-h-screen">
-      <div className="p-4 border-b border-border">
-        <Link href="/" className="font-semibold text-foreground">
-          Clear We Go
-        </Link>
-        <p className="text-xs text-muted-foreground mt-0.5">Admin</p>
-      </div>
-      <nav className="p-2 flex-1">
-        <ul className="space-y-0.5">
-          {nav.map(({ href, label }) => (
-            <li key={href}>
-              <Link
-                href={href}
-                className={cn(
-                  "block rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                  pathname === href
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                )}
-              >
-                {label}
+    <Sidebar>
+      <SidebarHeader className="border-b border-border">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton size="lg" asChild>
+              <Link href="/">
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+                  <span className="text-sm font-semibold">C</span>
+                </div>
+                <div className="grid flex-1 text-left text-sm leading-tight">
+                  <span className="truncate font-semibold">Clear We Go</span>
+                  <span className="truncate text-xs text-muted-foreground">Admin</span>
+                </div>
               </Link>
-            </li>
-          ))}
-        </ul>
-      </nav>
-      <div className="p-2 border-t border-border">
-        <button
-          type="button"
-          onClick={signOut}
-          className="w-full rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground text-left"
-        >
-          Sign out
-        </button>
-      </div>
-    </aside>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarHeader>
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {nav.map(({ href, label, icon: Icon }) => (
+                <SidebarMenuItem key={href}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={pathname === href || (href !== "/" && pathname.startsWith(href))}
+                    tooltip={label}
+                  >
+                    <Link href={href}>
+                      <Icon />
+                      <span>{label}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+      <SidebarFooter className="border-t border-border">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton onClick={signOut} tooltip="Sign out">
+              <LogOutIcon />
+              <span>Sign out</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
+    </Sidebar>
   );
 }

@@ -1,8 +1,8 @@
-# 06 — Projects Module
+# 06  - Projects Module
 
 ## What is a Project
 A project is a booked or in-progress job for a client.
-Previously called "jobs" — use "project" throughout the app.
+Previously called "jobs"  - use "project" throughout the app.
 
 ---
 
@@ -147,35 +147,35 @@ Auto-created when project is created based on service type.
 1. Authorization document verified
 2. Pre-approved items list reviewed
 3. Walk through all rooms with client list
-4. Before photos — every room
+4. Before photos  - every room
 5. Items sorted: keep, donate, dispose
 6. Flagged items confirmed with client
 7. Bin loaded
 8. Donation items set aside
-9. After photos — every room
+9. After photos  - every room
 10. Property swept and clean
 11. All doors and windows locked
 12. Keys returned or secured
 13. Mark as cleared
 
 ### Pre-Sale Clearout Checklist
-1. Before photos — every room
+1. Before photos  - every room
 2. Items removed per client instructions
 3. Staging items left in place
 4. Bin loaded
-5. After photos — every room
+5. After photos  - every room
 6. Property photo-ready confirmed
 7. All doors and windows locked
 8. Keys returned or secured
 9. Mark as cleared
 
 ### Tenant Move-Out Checklist
-1. Before photos — every room
+1. Before photos  - every room
 2. Document all items left by tenant
 3. Note any property damage with photos
 4. Items removed and disposed
 5. Bin loaded
-6. After photos — every room
+6. After photos  - every room
 7. Written inventory completed
 8. All doors and windows locked
 9. Keys returned to property manager
@@ -183,13 +183,13 @@ Auto-created when project is created based on service type.
 
 ### Downsizing Checklist
 1. Sensitive items identified and set aside
-2. Before photos — every room
+2. Before photos  - every room
 3. Items sorted: move, donate, dispose
 4. Moving items packed and labelled
 5. Flagged items confirmed with family
 6. Bin loaded
 7. Donation items set aside
-8. After photos — every room
+8. After photos  - every room
 9. Moving items dispatched to new location
 10. Property swept and clean
 11. All doors and windows locked

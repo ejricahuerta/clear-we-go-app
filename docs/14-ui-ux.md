@@ -1,15 +1,15 @@
-# 14 — UI / UX
+# 14  - UI / UX
 
 ## Design Principles
 - Clean, minimal, professional
 - Function over decoration
-- Fast to use — crew are on a job site, not at a desk
+- Fast to use  - crew are on a job site, not at a desk
 - Every action should take as few taps/clicks as possible
 - shadcn/ui components throughout
 
 ---
 
-## Admin App (app.clearwego.ca)
+## Admin App (admin.clearwego.ca)
 
 ### Layout
 - Dark sidebar (left, fixed)
@@ -90,7 +90,7 @@
 - Error messages: clear, actionable, not technical
 
 ### Offline State
-- Show orange banner at top: "You're offline — saving locally"
+- Show orange banner at top: "You're offline  - saving locally"
 - Checklist items work and save offline
 - Photos save to local storage offline
 - On reconnect: show "Syncing [n] items..." then "All synced ✓"
@@ -100,7 +100,7 @@
 - Photo taken → brief loading → thumbnail shown
 - Green checkmark on success
 - Retry button on failure
-- Never lose a photo silently — always show error if upload fails
+- Never lose a photo silently  - always show error if upload fails
 
 ### Flag Unexpected Item UX
 - Prominent red/orange button always visible during job

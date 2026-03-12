@@ -1,4 +1,4 @@
--- Clear We Go — Auth: link auth.users to public.users (docs/03-security-and-auth.md)
+-- Clear We Go  - Auth: link auth.users to public.users (docs/03-security-and-auth.md)
 -- Invite flow: app creates public.users (status=pending), then crew signs up → we set auth_user_id.
 -- Direct signup (owner/admin): no row exists → trigger creates public.users with auth_user_id = auth.uid().
 

@@ -1,4 +1,4 @@
-# Clear We Go — Cursor Build Spec
+# Clear We Go  - Cursor Build Spec
 
 ## Business Context
 Clear We Go is a Toronto-based estate and property cleanout business.

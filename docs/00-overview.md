@@ -1,4 +1,4 @@
-# 00 — Overview
+# 00  - Overview
 
 ## What We Are Building
 Two PWA apps for Clear We Go, a Toronto-based estate and property cleanout business.
@@ -12,27 +12,27 @@ Two PWA apps for Clear We Go, a Toronto-based estate and property cleanout busin
 - Service area: Toronto, North York, Markham, Vaughan, Newmarket, Richmond Hill
 
 ## Four Services
-1. **Estate Cleanout** — $2,800–$9,000
+1. **Estate Cleanout**  - $2,800–$9,000
    Full-service clearing for executors and families settling an estate.
    Every item documented. Nothing disposed without authorization.
    Completion report included.
 
-2. **Pre-Sale House Clearout** — $1,200–$4,500
+2. **Pre-Sale House Clearout**  - $1,200–$4,500
    Property cleared and photo-ready before listing.
    One vendor, one price, no surprises.
 
-3. **Tenant Move-Out** — $1,200–$3,500
+3. **Tenant Move-Out**  - $1,200–$3,500
    Documented clearing after tenant vacates.
    Full inventory and written report for property records.
    Volume pricing for property managers.
 
-4. **Downsizing** — Custom pricing
+4. **Downsizing**  - Custom pricing
    Helping families move a loved one into assisted living or smaller space.
    White-glove care, patient process.
 
 ## Two Apps
 
-### App 1: app.clearwego.ca
+### App 1: admin.clearwego.ca
 - Internal admin tool
 - Owner and admin only
 - Desktop first, responsive
@@ -42,7 +42,7 @@ Two PWA apps for Clear We Go, a Toronto-based estate and property cleanout busin
 ### App 2: crew.clearwego.ca
 - Crew field app
 - Crew only
-- Mobile first PWA — installed to home screen
+- Mobile first PWA  - installed to home screen
 - Email/password only
 - Job day operations only
 

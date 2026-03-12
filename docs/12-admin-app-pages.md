@@ -1,6 +1,6 @@
-# 12 — Admin App Pages
+# 12  - Admin App Pages
 
-## URL: app.clearwego.ca
+## URL: admin.clearwego.ca
 Desktop first. Responsive for mobile key actions.
 Dark sidebar navigation. White content area.
 
@@ -256,8 +256,8 @@ See 06-projects-module.md for full spec.
 
 ## Mobile Responsive Priority
 These views must work on owner's phone:
-1. Dashboard — check status on the go
-2. Project stage change — advance stage from phone
-3. Unexpected item decision — approve/reject from phone
-4. Crew assignment — assign crew from phone
-5. Mark payment received — confirm payment from phone
+1. Dashboard  - check status on the go
+2. Project stage change  - advance stage from phone
+3. Unexpected item decision  - approve/reject from phone
+4. Crew assignment  - assign crew from phone
+5. Mark payment received  - confirm payment from phone

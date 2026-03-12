@@ -48,7 +48,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6">
       <div className="w-full max-w-sm space-y-6">
-        <h1 className="text-xl font-semibold text-center">Clear We Go — Admin</h1>
+        <h1 className="text-xl font-semibold text-center">Clear We Go - Admin</h1>
         <p className="text-sm text-muted-foreground text-center">Sign in to continue</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">

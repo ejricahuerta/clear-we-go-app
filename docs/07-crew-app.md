@@ -1,10 +1,10 @@
-# 07 — Crew App
+# 07  - Crew App
 
 ## Overview
 - URL: crew.clearwego.ca
 - Mobile first PWA
 - Installed to home screen
-- Crew only — no admin features
+- Crew only  - no admin features
 - Bottom navigation bar
 
 ---
@@ -42,11 +42,11 @@ For each assigned project:
 9:00 AM
 
 Client instructions:
-"Handle with care — elderly items.
+"Handle with care  - elderly items.
 Do not remove items from master
 bedroom without calling owner first."
 
-Access: Lockbox — code in app
+Access: Lockbox  - code in app
 [ View Access Details ]
 
 [ Start Job ]
@@ -57,7 +57,7 @@ Access: Lockbox — code in app
 ```
 No jobs scheduled today.
 
-Next job: [date] — [service type]
+Next job: [date]  - [service type]
 [address]
 ```
 
@@ -85,7 +85,7 @@ Next job: [date] — [service type]
 - Each item: tap to mark complete
   - Shows checkmark, crew name, timestamp
   - Cannot uncheck once completed
-- Items in order — cannot reorder
+- Items in order  - cannot reorder
 
 ### Photo Upload Section
 - List of rooms to photograph
@@ -107,8 +107,8 @@ Next job: [date] — [service type]
   - Owner receives push notification immediately
   - Shows in list as "Pending decision"
 - Owner decision shown in real time:
-  - "Keep — move to keep area"
-  - "Remove — proceed with disposal"
+  - "Keep  - move to keep area"
+  - "Remove  - proceed with disposal"
 - Each decision logged to timeline
 
 ### Mark as Cleared Button
@@ -123,7 +123,7 @@ Next job: [date] — [service type]
   ✓ Before photos uploaded
   ✓ After photos uploaded
 
-  [ Confirm — Mark Cleared ]
+  [ Confirm  - Mark Cleared ]
   ```
 - On confirm:
   - Project stage → Cleared
@@ -137,7 +137,7 @@ Next job: [date] — [service type]
 ## Upcoming
 - Next 7 days of assigned projects
 - Simple list: date, service type, address, time
-- Read only — no actions
+- Read only  - no actions
 
 ---
 
@@ -183,4 +183,4 @@ Next job: [date] — [service type]
 - Success confirmation on every action
 - Never show admin features even if accidentally accessed
 - If no internet: show offline banner
-  "You're offline — checklist and photos save locally"
+  "You're offline  - checklist and photos save locally"

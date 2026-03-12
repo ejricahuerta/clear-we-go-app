@@ -1,4 +1,4 @@
-# 01 — Tech Stack
+# 01  - Tech Stack
 
 ## Frontend
 - **Next.js 14** with App Router
@@ -7,7 +7,7 @@
 - Both apps are built in Next.js
 
 ## Authentication
-- **NextAuth.js** — handles Google OAuth and email/password
+- **NextAuth.js**  - handles Google OAuth and email/password
 - Google OAuth for owner (admin app)
 - Email/password for admin (admin app)
 - Email/password + invite system for crew (crew app)
@@ -24,7 +24,7 @@
 
 ## Hosting
 - **Vercel**
-- Admin app: app.clearwego.ca
+- Admin app: admin.clearwego.ca
 - Crew app: crew.clearwego.ca
 - Auto deploys from GitHub
 - HTTPS enforced, HSTS enabled
@@ -92,7 +92,7 @@ STRIPE_WEBHOOK_SECRET=
 
 ## Project Structure
 ```
-/clearwego-admin   (app.clearwego.ca)
+/clearwego-admin   (admin.clearwego.ca)
   /app
   /components
   /lib

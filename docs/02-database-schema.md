@@ -1,4 +1,4 @@
-# 02 — Database Schema
+# 02  - Database Schema
 
 All tables live in one Supabase project.
 RLS is enabled on every table.

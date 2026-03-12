@@ -1,7 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export default function TeamPage() {
   const [name, setName] = useState("");
@@ -35,53 +38,52 @@ export default function TeamPage() {
   }
 
   return (
-    <div className="p-6 max-w-md">
-      <h1 className="text-xl font-semibold">Team</h1>
-      <p className="text-sm text-muted-foreground mt-1">Invite crew (owner only)</p>
-
-      <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-        <div>
-          <label htmlFor="name" className="block text-sm font-medium mb-1">
-            Crew member&apos;s name
-          </label>
-          <input
-            id="name"
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-            placeholder="e.g. Jane Smith"
-          />
-        </div>
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium mb-1">
-            Crew member&apos;s email
-          </label>
-          <input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-            placeholder="e.g. jane@example.com"
-          />
-        </div>
-        {error && (
-          <p className="text-sm text-destructive" role="alert">
-            {error}
-          </p>
-        )}
-        {success && (
-          <p className="text-sm text-green-600 dark:text-green-400" role="status">
-            Invite sent. They have 48 hours to set up their account.
-          </p>
-        )}
-        <Button type="submit" disabled={loading}>
-          {loading ? "Sending…" : "Send invite"}
-        </Button>
-      </form>
+    <div className="p-6 max-w-lg">
+      <Card>
+        <CardHeader>
+          <CardTitle>Team</CardTitle>
+          <CardDescription>Invite crew (owner only). They receive an email to set up their account.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Crew member&apos;s name</Label>
+              <Input
+                id="name"
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                placeholder="e.g. Jane Smith"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Crew member&apos;s email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                placeholder="e.g. jane@example.com"
+              />
+            </div>
+            {error && (
+              <p className="text-sm text-destructive" role="alert">
+                {error}
+              </p>
+            )}
+            {success && (
+              <p className="text-sm text-green-600 dark:text-green-400" role="status">
+                Invite sent. They have 48 hours to set up their account.
+              </p>
+            )}
+            <Button type="submit" disabled={loading}>
+              {loading ? "Sending…" : "Send invite"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 }

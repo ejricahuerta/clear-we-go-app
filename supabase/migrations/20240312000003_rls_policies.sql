@@ -1,4 +1,4 @@
--- Clear We Go — Row Level Security (docs/03-security-and-auth.md)
+-- Clear We Go  - Row Level Security (docs/03-security-and-auth.md)
 -- Enable RLS on all tables and add role-based policies.
 -- Uses current_user_id() which resolves via auth_user_id = auth.uid().
 
@@ -159,7 +159,7 @@ CREATE POLICY "audit_log_owner_read" ON public.audit_log FOR SELECT USING (publi
 -- No INSERT policy for authenticated users; app uses service role or edge function to insert.
 
 -- =============================================================================
--- SETTINGS (owner full; admin read non-sensitive only — simplified to read all for Phase 1)
+-- SETTINGS (owner full; admin read non-sensitive only  - simplified to read all for Phase 1)
 -- =============================================================================
 CREATE POLICY "settings_owner" ON public.settings FOR ALL USING (public.current_user_role() = 'owner');
 CREATE POLICY "settings_admin_read" ON public.settings FOR SELECT USING (public.current_user_role() = 'admin');

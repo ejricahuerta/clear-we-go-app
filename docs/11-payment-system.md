@@ -1,4 +1,4 @@
-# 11 — Payment System
+# 11  - Payment System
 
 ## Phase 1: E-Transfer (Launch With This)
 
@@ -88,7 +88,7 @@ Settings → Finance → Stripe:
 - Enter Stripe publishable key
 - Enter Stripe secret key
 - Enter Stripe webhook secret
-- Save — Pay Now button appears on all new invoices
+- Save  - Pay Now button appears on all new invoices
 
 ### Stripe Flow
 1. Invoice sent to client with Pay Now button

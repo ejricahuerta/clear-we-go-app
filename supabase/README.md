@@ -1,17 +1,17 @@
-# Supabase — Clear We Go
+# Supabase  - Clear We Go
 
-One Supabase project for both **admin** (app.clearwego.ca) and **crew** (crew.clearwego.ca) apps.
+One Supabase project for both **admin** (admin.clearwego.ca) and **crew** (crew.clearwego.ca) apps.
 
 ## Migrations
 
-- `20240312000000_initial_schema.sql` — Tables from docs/02-database-schema.md
-- `20240312000001_auth_trigger_and_helpers.sql` — Link auth.users to public.users; `current_user_id()` helper
-- `20240312000002_timeline_and_audit_protection.sql` — Append-only timeline_events; audit_log no-delete
-- `20240312000003_rls_policies.sql` — RLS on all tables per docs/03-security-and-auth.md
+- `20240312000000_initial_schema.sql`  - Tables from docs/02-database-schema.md
+- `20240312000001_auth_trigger_and_helpers.sql`  - Link auth.users to public.users; `current_user_id()` helper
+- `20240312000002_timeline_and_audit_protection.sql`  - Append-only timeline_events; audit_log no-delete
+- `20240312000003_rls_policies.sql`  - RLS on all tables per docs/03-security-and-auth.md
 
 ## Seed
 
-- `seed.sql` — Default admin users (clearwego@gmail.com = owner, admin@clearwego.ca = admin) and settings keys.
+- `seed.sql`  - Default admin users (clearwego@gmail.com = owner, admin@clearwego.ca = admin) and settings keys.
 
 **How to run:** The Supabase CLI has no `db seed` for remote projects. Run the seed manually:
 

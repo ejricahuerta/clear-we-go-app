@@ -1,4 +1,4 @@
-# 09 — Documents and PDF
+# 09  - Documents and PDF
 
 ## Overview
 All PDFs generated using react-pdf.
@@ -60,7 +60,7 @@ TOTAL: $[amount]
 To accept this quote, click the link below
 or call us at (581) 998-5673.
 
-[ Accept Quote — [link] ]
+[ Accept Quote  - [link] ]
 
 Quote valid for 7 days from issue date.
 
@@ -73,7 +73,7 @@ noreply@clearwego.ca
 ```
 
 ### Quote Acceptance Page
-- Simple page at app.clearwego.ca/quote/[token]
+- Simple page at admin.clearwego.ca/quote/[token]
 - Shows quote summary
 - "I accept this quote" button
 - On accept:
@@ -240,9 +240,9 @@ Decided by: [name] at [time]
 ─────────────────────────────
 
 ITEMS SUMMARY
-Kept:     [n items — description]
-Donated:  [n items — vendor name]
-Disposed: [n items — vendor name]
+Kept:     [n items  - description]
+Donated:  [n items  - vendor name]
+Disposed: [n items  - vendor name]
 
 ─────────────────────────────
 
@@ -258,8 +258,8 @@ Date: [date] at [time]
 
 CREW CONFIRMATION
 This project was completed by:
-[Crew member name] — [role]
-[Crew member name] — [role]
+[Crew member name]  - [role]
+[Crew member name]  - [role]
 
 ─────────────────────────────
 

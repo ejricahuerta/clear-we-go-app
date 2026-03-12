@@ -1,4 +1,4 @@
-# 15 — Build Order
+# 15  - Build Order
 
 ## Rules
 - Complete each phase before starting the next
@@ -8,7 +8,7 @@
 
 ---
 
-## Phase 1 — Foundation
+## Phase 1  - Foundation
 *Goal: Both apps load, auth works, basic navigation in place*
 
 1. Create Supabase project
@@ -34,7 +34,7 @@
 
 ---
 
-## Phase 2 — Core Admin
+## Phase 2  - Core Admin
 *Goal: Owner can manage contacts, clients, and projects*
 
 13. Contacts module
@@ -68,7 +68,7 @@
 
 ---
 
-## Phase 3 — Crew App
+## Phase 3  - Crew App
 *Goal: Crew can complete a full job from their phone*
 
 18. Today's jobs view
@@ -107,7 +107,7 @@
 
 ---
 
-## Phase 4 — Documents and Payments
+## Phase 4  - Documents and Payments
 *Goal: Owner can generate and send all documents, receive payment*
 
 26. Quote PDF generator (react-pdf)
@@ -140,11 +140,11 @@
     - Built but not active
     - Toggle in Settings → Finance
 
-**Done when:** Owner can generate a quote, client can accept it, owner can invoice, receive payment confirmation, send receipt and completion report — all logged to timeline.
+**Done when:** Owner can generate a quote, client can accept it, owner can invoice, receive payment confirmation, send receipt and completion report  - all logged to timeline.
 
 ---
 
-## Phase 5 — Communications
+## Phase 5  - Communications
 *Goal: All SMS and email triggers working automatically*
 
 33. Twilio SMS integration
@@ -168,7 +168,7 @@
 
 ---
 
-## Phase 6 — Operations
+## Phase 6  - Operations
 *Goal: Full business operations in one place*
 
 37. Finances module (owner only)
@@ -201,7 +201,7 @@
 
 ---
 
-## Phase 7 — Polish
+## Phase 7  - Polish
 *Goal: Production ready*
 
 43. Mobile optimisation of admin app

@@ -1,10 +1,10 @@
-# Clear We Go — Task List
+# Clear We Go  - Task List
 
 Based on **docs/15-build-order.md**. Update checkboxes as you complete work.
 
 ---
 
-## Phase 1 — Foundation
+## Phase 1  - Foundation
 
 *Goal: Both apps load, auth works, basic navigation in place.*
 
@@ -46,66 +46,66 @@ Based on **docs/15-build-order.md**. Update checkboxes as you complete work.
 - [x] **11. PWA manifest.json on both apps**  
   Add to home screen; service worker.
 
-- [ ] **12. Deploy both apps to Vercel**  
-  app.clearwego.ca, crew.clearwego.ca. See **docs/deploy-vercel-github.md** (GitHub → Vercel CI/CD, two projects, monorepo roots).
+- [x] **12. Deploy both apps to Vercel**  
+  admin.clearwego.ca, crew.clearwego.ca. See **docs/deploy-vercel-github.md** (GitHub → Vercel CI/CD, two projects, monorepo roots).
 
 **Phase 1 done when:** Owner logs in with Google (admin). Admin logs in with email/password. Owner invites crew. Crew accepts invite and logs in to crew app.
 
 ---
 
-## Phase 2 — Core Admin
+## Phase 2  - Core Admin
 
 *Goal: Owner can manage contacts, clients, and projects.*
 
-- [ ] **13. Contacts module** — list, filters, CSV import, profile, outreach, convert to client, analytics.
-- [ ] **14. Client profiles** — list, profile page, timeline (append-only), `logTimelineEvent`.
-- [ ] **15. Projects CRUD** — Kanban, list, detail (tabs), service fields, stage change, key/access.
-- [ ] **16. Service-specific checklists** — auto-create on project, by service type.
-- [ ] **17. Crew assignment with availability** — display availability, assign crew, notification.
+- [x] **13. Contacts module**  - list, filters, CSV import, profile, outreach, convert to client, analytics.
+- [x] **14. Client profiles**  - list, profile page, timeline (append-only), `logTimelineEvent`.
+- [x] **15. Projects CRUD**  - Kanban, list, detail (tabs), service fields, stage change, key/access.
+- [ ] **16. Service-specific checklists**  - auto-create on project, by service type.
+- [ ] **17. Crew assignment with availability**  - display availability, assign crew, notification.
 
 **Ref:** docs/04-contacts-module.md, 05-clients-and-timeline.md, 06-projects-module.md, 08-availability-system.md.
 
 ---
 
-## Phase 3 — Crew App
+## Phase 3  - Crew App
 
 *Goal: Crew can complete a full job from their phone.*
 
-- [ ] **18. Today's jobs view** — assigned projects for today, Start Job.
-- [ ] **19. Job detail** — checklist, access details.
-- [ ] **20. Photo upload** — camera, before/after, Supabase Storage, offline sync.
-- [ ] **21. Flag unexpected item** — photo + description, push to owner.
-- [ ] **22. Mark as cleared** — checklist check, confirm, update stage, notify owner.
-- [ ] **23. Availability management** — weekly schedule, unavailable dates.
-- [ ] **24. Offline support** — cache jobs, local storage, sync on reconnect.
+- [ ] **18. Today's jobs view**  - assigned projects for today, Start Job.
+- [ ] **19. Job detail**  - checklist, access details.
+- [ ] **20. Photo upload**  - camera, before/after, Supabase Storage, offline sync.
+- [ ] **21. Flag unexpected item**  - photo + description, push to owner.
+- [ ] **22. Mark as cleared**  - checklist check, confirm, update stage, notify owner.
+- [ ] **23. Availability management**  - weekly schedule, unavailable dates.
+- [ ] **24. Offline support**  - cache jobs, local storage, sync on reconnect.
 - [ ] **25. Push notifications (crew app).**
 
 **Ref:** docs/07-crew-app.md, 08-availability-system.md.
 
 ---
 
-## Phase 4 — Documents and Payments
+## Phase 4  - Documents and Payments
 
 - [ ] **26–32.** Quote, invoice, receipt, completion report PDFs; payment received flow; overdue handling; Stripe (disabled by default).  
 **Ref:** docs/09-documents-and-pdf.md, 11-payment-system.md.
 
 ---
 
-## Phase 5 — Communications
+## Phase 5  - Communications
 
 - [ ] **33–36.** Twilio SMS (all triggers), Resend email, scheduled messages, SMS toggles.  
 **Ref:** docs/10-communications-sms-email.md.
 
 ---
 
-## Phase 6 — Operations
+## Phase 6  - Operations
 
 - [ ] **37–42.** Finances (owner), team management, vendors, notifications centre, push (admin), Settings.  
 **Ref:** docs/11, 12, 13.
 
 ---
 
-## Phase 7 — Polish
+## Phase 7  - Polish
 
 - [ ] **43–50.** Mobile optimisation, error/loading states, security headers, audit log viewer, Lighthouse, PWA tuning, QA.  
 **Ref:** docs/14-ui-ux.md.

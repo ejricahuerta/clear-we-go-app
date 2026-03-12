@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Clear We Go — Admin",
+    name: "Clear We Go - Admin",
     short_name: "Clear We Go",
     description: "Internal operations for Clear We Go",
     start_url: "/",

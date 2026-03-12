@@ -1,4 +1,4 @@
-# 10 — Communications: SMS and Email
+# 10  - Communications: SMS and Email
 
 ## Overview
 - SMS via Twilio (from Clear We Go Toronto number)
@@ -41,7 +41,7 @@ Trigger: Client accepts quote
 ```
 Hi [First Name], your quote is confirmed.
 We'll be in touch to schedule your job.
-Clear We Go — (581) 998-5673
+Clear We Go  - (581) 998-5673
 ```
 
 ### 3. Job Scheduled Confirmation
@@ -76,7 +76,7 @@ Trigger: Crew flags unexpected item
 Hi [First Name], your crew found something
 unexpected: [item description].
 Please call (581) 998-5673 to let us
-know — keep or remove?
+know  - keep or remove?
 ```
 
 ### 7. Job Cleared
@@ -85,7 +85,7 @@ Trigger: Crew marks project as Cleared
 Hi [First Name], your [service type] at
 [address] is complete. Your completion
 report will be emailed within 24 hours.
-Clear We Go — (581) 998-5673
+Clear We Go  - (581) 998-5673
 ```
 
 ### 8. Invoice Sent
@@ -98,7 +98,7 @@ Include [CWG-XXXX] in the message.
 Questions? (581) 998-5673
 ```
 
-### 9. Overdue Reminder — Day 3
+### 9. Overdue Reminder  - Day 3
 Trigger: Invoice unpaid 3 days past due
 ```
 Hi [First Name], a friendly reminder that
@@ -108,7 +108,7 @@ billing@clearwego.ca
 Questions? (581) 998-5673
 ```
 
-### 10. Overdue Reminder — Day 7
+### 10. Overdue Reminder  - Day 7
 Trigger: Invoice unpaid 7 days past due
 ```
 Hi [First Name], your invoice [CWG-XXXX]
@@ -123,16 +123,16 @@ Hi [First Name], thank you for choosing
 Clear We Go. If you're happy with the job,
 a Google review means the world to us:
 [google review link]
-Thank you — Clear We Go
+Thank you  - Clear We Go
 ```
 
 ### 12. Review Follow Up
 Trigger: 7 days after review request, if no review
 ```
-Hi [First Name], just a gentle reminder —
+Hi [First Name], just a gentle reminder  -
 we'd really appreciate a Google review:
 [google review link]
-Thank you — Clear We Go
+Thank you  - Clear We Go
 ```
 
 ---
@@ -152,7 +152,7 @@ Open your app: crew.clearwego.ca
 ### 14. Job Reminder to Crew
 Trigger: Night before job at 6:00pm
 ```
-Hi [First Name], reminder — job tomorrow:
+Hi [First Name], reminder  - job tomorrow:
 [Service Type] at [time]
 [Address]
 Open your app: crew.clearwego.ca
@@ -165,24 +165,24 @@ Open your app: crew.clearwego.ca
 All emails sent from noreply@clearwego.ca via Resend.
 
 ### Quote Email
-Subject: "Your Clear We Go quote — [service type] at [address]"
+Subject: "Your Clear We Go quote  - [service type] at [address]"
 - Quote PDF attached
 - Accept quote button
 - Contact details
 
 ### Invoice Email
-Subject: "Invoice [CWG-XXXX] — Clear We Go"
+Subject: "Invoice [CWG-XXXX]  - Clear We Go"
 - Invoice PDF attached
 - Payment instructions
 - Contact details
 
 ### Receipt Email
-Subject: "Payment received — Clear We Go"
+Subject: "Payment received  - Clear We Go"
 - Receipt PDF attached
 - Thank you message
 
 ### Completion Report Email
-Subject: "Your completion report is ready — [address]"
+Subject: "Your completion report is ready  - [address]"
 - Completion report PDF attached
 - Summary of work done
 - Contact details for any questions

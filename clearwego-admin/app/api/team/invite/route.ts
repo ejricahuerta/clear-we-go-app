@@ -105,7 +105,7 @@ export async function POST(request: Request) {
       <p>Tap below to set up your account.</p>
       <p><a href="${setupLink}" style="display:inline-block; padding: 12px 24px; background: #171717; color: #fff; text-decoration: none; border-radius: 6px;">Set up my account</a></p>
       <p>This link expires in 48 hours.</p>
-      <p>Clear We Go<br/>crew.clearwego.ca</p>
+      <p>Clear We Go</p>
     `,
   });
 

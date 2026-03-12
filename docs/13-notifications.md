@@ -1,9 +1,9 @@
-# 13 — Notifications
+# 13  - Notifications
 
 ## Channels
-1. **Push notifications** — Web Push API via Supabase Edge Functions
-2. **SMS** — Twilio (see 10-communications-sms-email.md for templates)
-3. **In-app** — Badge on notification bell in admin app nav
+1. **Push notifications**  - Web Push API via Supabase Edge Functions
+2. **SMS**  - Twilio (see 10-communications-sms-email.md for templates)
+3. **In-app**  - Badge on notification bell in admin app nav
 
 ---
 
@@ -23,10 +23,10 @@
 | Trigger | Time | Message |
 |---------|------|---------|
 | Follow ups due today | 8:00am daily | "You have [n] contacts due for follow up today." |
-| Invoice overdue — Day 1 | End of due date | "Invoice CWG-0001 is overdue ($3,200 — John Smith)" |
-| Invoice overdue — Day 3 | Day 3 | Auto SMS sent to client. Owner notified. |
-| Invoice overdue — Day 7 | Day 7 | Auto SMS sent again. Owner notified. |
-| Invoice overdue — Day 14 | Day 14 | "Invoice CWG-0001 is 14 days overdue. Handle personally." |
+| Invoice overdue  - Day 1 | End of due date | "Invoice CWG-0001 is overdue ($3,200  - John Smith)" |
+| Invoice overdue  - Day 3 | Day 3 | Auto SMS sent to client. Owner notified. |
+| Invoice overdue  - Day 7 | Day 7 | Auto SMS sent again. Owner notified. |
+| Invoice overdue  - Day 14 | Day 14 | "Invoice CWG-0001 is 14 days overdue. Handle personally." |
 | Unaccepted invite (24hr) | 24hr after send | "Your invite to Mike D. hasn't been accepted yet." |
 
 ---
@@ -37,12 +37,12 @@
 | Trigger | Message |
 |---------|---------|
 | Assigned to project | "New job assigned: Estate Cleanout, March 14 at 9am, 123 Rosedale Valley Rd" |
-| Owner decides on unexpected item | "Decision received: [Keep / Remove] — [item description]" |
+| Owner decides on unexpected item | "Decision received: [Keep / Remove]  - [item description]" |
 
 ### Scheduled
 | Trigger | Time | Message |
 |---------|------|---------|
-| Job day reminder | 6:00pm night before | "Reminder — job tomorrow at [time]: [service type] — [address]" |
+| Job day reminder | 6:00pm night before | "Reminder  - job tomorrow at [time]: [service type]  - [address]" |
 
 ---
 

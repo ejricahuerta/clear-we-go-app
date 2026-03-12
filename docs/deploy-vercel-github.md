@@ -4,7 +4,7 @@ This repo is a **monorepo**: two Next.js apps in one repository. You deploy **tw
 
 ## 1. Push the repo to GitHub
 
-From the repo root (no need to commit `.env.local` or `keys.json` — they are in `.gitignore`):
+From the repo root (no need to commit `.env.local` or `keys.json`  - they are in `.gitignore`):
 
 ```bash
 git init
@@ -21,7 +21,7 @@ Use your actual GitHub org/repo URL. After this, Vercel will deploy from `main` 
 
 In [Vercel](https://vercel.com): **Add New Project** → **Import Git Repository** → select your repo.
 
-### Project 1 — Admin app (app.clearwego.ca)
+### Project 1  - Admin app (admin.clearwego.ca)
 
 - **Project Name:** e.g. `clearwego-admin`
 - **Root Directory:** Click **Edit** and set to **`clearwego-admin`** (not the repo root).
@@ -50,11 +50,11 @@ In **Google Cloud Console** → your OAuth client → **Authorized redirect URIs
 - `https://YOUR_SUPABASE_REF.supabase.co/auth/v1/callback` (Supabase callback)
 - Your admin app URL is not needed in Google; Supabase redirects to your app’s `/auth/callback` using the request origin.
 
-After the first deploy, add your **custom domain**: **Settings → Domains** → add **app.clearwego.ca** and follow DNS instructions (usually a CNAME to `cname.vercel-dns.com` or similar).
+After the first deploy, add your **custom domain**: **Settings → Domains** → add **admin.clearwego.ca** and follow DNS instructions (usually a CNAME to `cname.vercel-dns.com` or similar).
 
 ---
 
-### Project 2 — Crew app (crew.clearwego.ca)
+### Project 2  - Crew app (crew.clearwego.ca)
 
 - **Project Name:** e.g. `clearwego-crew`
 - **Root Directory:** **`clearwego-crew`**
@@ -77,10 +77,10 @@ No Resend or Google vars needed for crew. Add **Custom Domain**: **crew.clearweg
 
 ## 4. Checklist after deploy
 
-- [ ] Admin: open `https://app.clearwego.ca` (or your Vercel URL), log in with Google or email.
+- [ ] Admin: open `https://admin.clearwego.ca` (or your Vercel URL), log in with Google or email.
 - [ ] Crew: open `https://crew.clearwego.ca`, log in with a crew account.
 - [ ] From admin, send an invite; open the invite link (should point to `https://crew.clearwego.ca/setup?token=...`). Complete setup and sign in on crew.
-- [ ] In Supabase Dashboard → Authentication → URL Configuration: set **Site URL** to your production admin URL (e.g. `https://app.clearwego.ca`) if you use redirects; add **Redirect URLs** for `https://app.clearwego.ca/**` and `https://crew.clearwego.ca/**` if required.
+- [ ] In Supabase Dashboard → Authentication → URL Configuration: set **Site URL** to your production admin URL (e.g. `https://admin.clearwego.ca`) if you use redirects; add **Redirect URLs** for `https://admin.clearwego.ca/**` and `https://crew.clearwego.ca/**` if required.
 
 ## 5. Env templates
 

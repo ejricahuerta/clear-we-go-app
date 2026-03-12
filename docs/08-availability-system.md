@@ -1,4 +1,4 @@
-# 08 — Availability System
+# 08  - Availability System
 
 ## Purpose
 Ensure owner always knows who is free before assigning crew to a project.
@@ -14,7 +14,7 @@ Set once. Updated by crew member.
 
 ### 2. Specific Date Exceptions
 Set as needed. Updated by crew member.
-"I can't do March 20 — personal"
+"I can't do March 20  - personal"
 
 ---
 
@@ -28,9 +28,9 @@ Show crew member as **Available** if ALL three conditions are true:
 3. No existing `crew_assignment` for that date (not on another project)
 
 Show crew member as **Unavailable** with reason if ANY condition fails:
-- "Not available on [day of week]" — general schedule
-- "Marked unavailable — [reason]" — specific date
-- "Already assigned to Project #XXXX on [date]" — existing booking
+- "Not available on [day of week]"  - general schedule
+- "Marked unavailable  - [reason]"  - specific date
+- "Already assigned to Project #XXXX on [date]"  - existing booking
 
 ---
 
@@ -39,7 +39,7 @@ Show crew member as **Unavailable** with reason if ANY condition fails:
 On project detail page → Crew tab:
 
 ```
-Assign Crew — Thursday March 14, 9:00 AM
+Assign Crew  - Thursday March 14, 9:00 AM
 
 AVAILABLE (2)
 ● Mike D.     Full Time    ✓ Free Mar 14    [ Assign ]
@@ -47,7 +47,7 @@ AVAILABLE (2)
 
 UNAVAILABLE (2)
 ✗ James R.   On Call      Marked unavailable (sick)
-✗ Tony M.    Part Time    Already assigned — Project #0011
+✗ Tony M.    Part Time    Already assigned  - Project #0011
 ```
 
 - Click Assign to add crew member
@@ -66,7 +66,7 @@ UNAVAILABLE (2)
   Availability Update
   Mike D. marked March 14 unavailable (sick).
   You have an unassigned project on that date:
-  Estate Cleanout — 123 Rosedale Valley Rd
+  Estate Cleanout  - 123 Rosedale Valley Rd
   ```
 
 ### When Owner Assigns Crew
@@ -84,8 +84,8 @@ UNAVAILABLE (2)
 ### Night Before Reminder to Crew (6pm)
 - Auto SMS + push to all assigned crew:
   ```
-  Reminder — job tomorrow at 9:00 AM
-  Estate Cleanout — 123 Rosedale Valley Rd
+  Reminder  - job tomorrow at 9:00 AM
+  Estate Cleanout  - 123 Rosedale Valley Rd
   Open your app: crew.clearwego.ca
   ```
 

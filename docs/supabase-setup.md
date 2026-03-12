@@ -1,6 +1,6 @@
-# Supabase setup — Clear We Go (Phase 1)
+# Supabase setup  - Clear We Go (Phase 1)
 
-Use this after creating your Supabase project. Both **app.clearwego.ca** (admin) and **crew.clearwego.ca** (crew) use the same project.
+Use this after creating your Supabase project. Both **admin.clearwego.ca** (admin) and **crew.clearwego.ca** (crew) use the same project.
 
 ## 1. Create Supabase project
 
@@ -11,10 +11,10 @@ Use this after creating your Supabase project. Both **app.clearwego.ca** (admin)
 
 Apply migrations in order (oldest first):
 
-- **Option A — Supabase Dashboard**  
+- **Option A  - Supabase Dashboard**  
   SQL Editor → New query → paste each migration file from `supabase/migrations/` in order (20240312000000 → 20240312000001 → 20240312000002 → 20240312000003) → Run.
 
-- **Option B — Supabase CLI**  
+- **Option B  - Supabase CLI**  
   From repo root:
   ```bash
   supabase link --project-ref YOUR_PROJECT_REF

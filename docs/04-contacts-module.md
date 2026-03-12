@@ -1,9 +1,9 @@
-# 04 — Contacts Module
+# 04  - Contacts Module
 
 ## Purpose
 Track outreach contacts before they become clients.
 200 contacts imported per month from Apollo.io.
-This is NOT a full CRM — it is a simple outreach tracker.
+This is NOT a full CRM  - it is a simple outreach tracker.
 
 ---
 
@@ -32,7 +32,7 @@ New → Contacted → Responded → Converted → [becomes Client]
 - Contacts where follow_up_date = today
 - Sorted by type (lawyers first, then realtors, then PMs)
 - This is the daily outreach list
-- Highlighted prominently — this is the most important view
+- Highlighted prominently  - this is the most important view
 
 ### No Response
 - Email 1 sent but no response
@@ -43,7 +43,7 @@ New → Contacted → Responded → Converted → [becomes Client]
 ### Responded
 - Status = responded
 - Not yet converted
-- Priority list — act on these fast
+- Priority list  - act on these fast
 
 ---
 
@@ -115,7 +115,7 @@ One click on any contact:
    - Sets contact.converted_to_client = true
    - Sets contact.status = converted
    - Logs to client timeline:
-     "Converted from contact — originally found via [source]"
+     "Converted from contact  - originally found via [source]"
 3. Redirects to new client profile
 
 ---
@@ -145,5 +145,5 @@ LinkedIn      | 20    | 1         | 0         | 0%
 - Convert to client button
 - Mark as dead button
 - Notes field
-- Activity log (manual notes only — not full timeline)
+- Activity log (manual notes only  - not full timeline)
   - Each note shows: text, who added it, timestamp

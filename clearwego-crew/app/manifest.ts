@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Clear We Go — Crew",
+    name: "Clear We Go - Crew",
     short_name: "Crew",
     description: "Crew app for Clear We Go",
     start_url: "/",
