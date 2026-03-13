@@ -25,6 +25,17 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
+import { FolderOpen, History } from "lucide-react";
+
 type Client = {
   id: string;
   first_name: string;
@@ -189,11 +200,7 @@ export default function ClientProfilePage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center p-6">
-        <p className="text-muted-foreground">Loading…</p>
-      </div>
-    );
+    return <LoadingSpinner fullPage />;
   }
   if (!client) return <div className="p-6">Client not found.</div>;
 
@@ -329,7 +336,20 @@ export default function ClientProfilePage() {
         </CardHeader>
         <CardContent>
           {projects.length === 0 ? (
-            <p className="text-muted-foreground text-sm">No projects yet.</p>
+            <Empty className="border-0 py-8">
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <FolderOpen className="size-5" />
+                </EmptyMedia>
+                <EmptyTitle className="text-base">No projects yet</EmptyTitle>
+                <EmptyDescription>Create a project from the Projects page.</EmptyDescription>
+              </EmptyHeader>
+              <EmptyContent>
+                <Link href="/projects/new">
+                  <Button variant="outline" size="sm">New project</Button>
+                </Link>
+              </EmptyContent>
+            </Empty>
           ) : (
             <ul className="space-y-2">
               {projects.map((p) => (
@@ -383,10 +403,15 @@ export default function ClientProfilePage() {
                 </Select>
               </div>
               {Object.keys(eventsByDate).length === 0 ? (
-                <div className="rounded-lg border border-dashed py-8 text-center">
-                  <p className="text-sm text-muted-foreground">No events yet</p>
-                  <p className="text-xs text-muted-foreground mt-1">Add a note or activity will appear here</p>
-                </div>
+                <Empty className="py-8">
+                  <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                      <History className="size-5" />
+                    </EmptyMedia>
+                    <EmptyTitle className="text-base">No events yet</EmptyTitle>
+                    <EmptyDescription>Add a note or activity will appear here.</EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
               ) : (
                 <div className="space-y-5 max-h-[calc(100vh-12rem)] overflow-y-auto pr-1">
                   {Object.entries(eventsByDate)

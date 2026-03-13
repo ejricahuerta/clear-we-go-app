@@ -25,6 +25,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
+import { Users, ListChecks, History } from "lucide-react";
 
 type Project = {
   id: string;
@@ -265,11 +275,7 @@ export default function ProjectDetailPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center p-6">
-        <p className="text-muted-foreground">Loading…</p>
-      </div>
-    );
+    return <LoadingSpinner fullPage />;
   }
   if (!project) return <div className="p-6">Project not found.</div>;
 
@@ -637,10 +643,31 @@ export default function ProjectDetailPage() {
                     <div className="space-y-2">
                       <p className="text-sm font-medium">Assigned ({selectedCrewIds.size})</p>
                       {crewData.crew.length === 0 && crewData.all.length > 0 && (
-                        <p className="text-sm text-muted-foreground">No one assigned yet. Add from Available below.</p>
+                        <Empty className="border-0 py-6">
+                          <EmptyHeader>
+                            <EmptyMedia variant="icon">
+                              <Users className="size-5" />
+                            </EmptyMedia>
+                            <EmptyTitle className="text-base">No one assigned yet</EmptyTitle>
+                            <EmptyDescription>Add from Available below.</EmptyDescription>
+                          </EmptyHeader>
+                        </Empty>
                       )}
                       {crewData.all.length === 0 && (
-                        <p className="text-sm text-muted-foreground">No crew members yet. Invite crew from Team.</p>
+                        <Empty className="border-0 py-6">
+                          <EmptyHeader>
+                            <EmptyMedia variant="icon">
+                              <Users className="size-5" />
+                            </EmptyMedia>
+                            <EmptyTitle className="text-base">No crew members yet</EmptyTitle>
+                            <EmptyDescription>Invite crew from Team.</EmptyDescription>
+                          </EmptyHeader>
+                          <EmptyContent>
+                            <Link href="/team">
+                              <Button variant="outline" size="sm">Go to Team</Button>
+                            </Link>
+                          </EmptyContent>
+                        </Empty>
                       )}
                       {crewData.all
                         .filter((m) => selectedCrewIds.has(m.id))
@@ -725,7 +752,7 @@ export default function ProjectDetailPage() {
                   </Button>
                 </>
               ) : (
-                <p className="text-sm text-muted-foreground">Loading crew…</p>
+                <LoadingSpinner message="Loading crew…" size="sm" />
               )}
             </CardContent>
           </Card>
@@ -743,7 +770,15 @@ export default function ProjectDetailPage() {
             </CardHeader>
             <CardContent className="space-y-2">
               {checklistItems.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No checklist items. Create the project with a service type to auto-generate items.</p>
+                <Empty className="border-0 py-8">
+                  <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                      <ListChecks className="size-5" />
+                    </EmptyMedia>
+                    <EmptyTitle className="text-base">No checklist items</EmptyTitle>
+                    <EmptyDescription>Items are created when the project is created with a service type.</EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
               ) : (
                 <ul className="space-y-1.5">
                   {checklistItems.map((item) => (
@@ -792,10 +827,15 @@ export default function ProjectDetailPage() {
             </CardHeader>
             <CardContent>
               {Object.keys(timelineByDate).length === 0 ? (
-                <div className="rounded-lg border border-dashed py-6 text-center">
-                  <p className="text-sm text-muted-foreground">No events yet</p>
-                  <p className="text-xs text-muted-foreground mt-1">Stage changes and activity will appear here</p>
-                </div>
+                <Empty className="py-8">
+                  <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                      <History className="size-5" />
+                    </EmptyMedia>
+                    <EmptyTitle className="text-base">No events yet</EmptyTitle>
+                    <EmptyDescription>Stage changes and activity will appear here.</EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
               ) : (
                 <div className="space-y-5 max-h-[calc(100vh-12rem)] overflow-y-auto pr-1">
                   {Object.entries(timelineByDate)

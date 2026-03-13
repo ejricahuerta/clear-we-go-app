@@ -12,7 +12,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Mail, Copy, Check } from "lucide-react";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
+import { Mail, Copy, Check, Users } from "lucide-react";
 
 type Client = {
   id: string;
@@ -63,11 +72,22 @@ export default function ClientsPage() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="flex min-h-[200px] items-center justify-center py-8">
-              <p className="text-muted-foreground">Loading…</p>
-            </div>
+            <LoadingSpinner className="min-h-[200px]" />
           ) : clients.length === 0 ? (
-            <p className="text-muted-foreground py-8 text-center">No clients yet. Convert a contact to create one.</p>
+            <Empty className="py-12">
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <Users className="size-6" />
+                </EmptyMedia>
+                <EmptyTitle>No clients yet</EmptyTitle>
+                <EmptyDescription>Convert a contact to create one.</EmptyDescription>
+              </EmptyHeader>
+              <EmptyContent>
+                <Link href="/contacts">
+                  <Button>View contacts</Button>
+                </Link>
+              </EmptyContent>
+            </Empty>
           ) : (
             <Table>
               <TableHeader>

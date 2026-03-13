@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import {
   Table,
   TableBody,
@@ -22,7 +23,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { ChevronsRightLeft, ChevronRight } from "lucide-react";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
+import { ChevronsRightLeft, ChevronRight, FolderKanban } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -199,8 +208,27 @@ export default function ProjectsPage() {
       >
         {loading ? (
           <Card>
-            <CardContent className="flex min-h-[200px] items-center justify-center p-6">
-              <p className="text-muted-foreground">Loading…</p>
+            <CardContent className="min-h-[200px] p-0">
+              <LoadingSpinner className="min-h-[200px]" />
+            </CardContent>
+          </Card>
+        ) : projects.length === 0 ? (
+          <Card>
+            <CardContent className="p-0">
+              <Empty className="py-16">
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <FolderKanban className="size-6" />
+                  </EmptyMedia>
+                  <EmptyTitle>No projects yet</EmptyTitle>
+                  <EmptyDescription>Create your first project to get started.</EmptyDescription>
+                </EmptyHeader>
+                <EmptyContent>
+                  <Link href="/projects/new">
+                    <Button>New project</Button>
+                  </Link>
+                </EmptyContent>
+              </Empty>
             </CardContent>
           </Card>
         ) : view === "list" ? (

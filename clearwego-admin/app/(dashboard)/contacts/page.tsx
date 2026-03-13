@@ -23,7 +23,16 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { TablePagination } from "@/components/ui/table-pagination";
-import { Mail, Copy, Check } from "lucide-react";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
+import { Mail, Copy, Check, SearchX } from "lucide-react";
 
 type View = "all" | "follow_up" | "no_response" | "responded";
 
@@ -210,11 +219,22 @@ export default function ContactsPage() {
           </Tabs>
 
           {loading ? (
-            <div className="flex min-h-[200px] items-center justify-center py-8">
-              <p className="text-muted-foreground">Loading…</p>
-            </div>
+            <LoadingSpinner className="min-h-[200px]" />
           ) : contacts.length === 0 ? (
-            <p className="text-muted-foreground py-8 text-center">No contacts match.</p>
+            <Empty className="py-12">
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <SearchX className="size-6" />
+                </EmptyMedia>
+                <EmptyTitle>No contacts match</EmptyTitle>
+                <EmptyDescription>Try adjusting your filters or search.</EmptyDescription>
+              </EmptyHeader>
+              <EmptyContent>
+                <Button variant="outline" onClick={() => { setSearch(""); setStatusFilter(""); setPage(1); }}>
+                  Clear filters
+                </Button>
+              </EmptyContent>
+            </Empty>
           ) : (
             <>
               <Table>
