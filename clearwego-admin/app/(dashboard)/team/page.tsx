@@ -78,7 +78,7 @@ export default function TeamPage() {
                 Invite sent. They have 48 hours to set up their account.
               </p>
             )}
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" loading={loading}>
               {loading ? "Sending…" : "Send invite"}
             </Button>
           </form>

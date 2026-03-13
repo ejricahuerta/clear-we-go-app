@@ -36,29 +36,59 @@ type PreviewRow = {
   duplicate?: "email" | "phone" | "both";
 };
 
-const APOLLO_MAP: Record<string, string> = {
-  "First Name": "first_name",
-  "Last Name": "last_name",
-  "Company": "company",
-  "Title": "type",
-  "Email": "email",
-  "Phone": "phone",
-  "City": "neighbourhood",
+/** Normalize a CSV header for matching: lowercase, single underscores, no extra chars */
+function normalizeHeader(h: string): string {
+  return h
+    .trim()
+    .toLowerCase()
+    .replace(/[^\w\s]/g, " ")
+    .replace(/\s+/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_|_$/g, "");
+}
+
+/** Aliases per contact field — any CSV column matching one of these maps to that field */
+const FIELD_ALIASES: Record<string, string[]> = {
+  first_name: ["first_name", "firstname", "first_name", "first", "given_name", "givenname", "fname"],
+  last_name: ["last_name", "lastname", "last_name", "last", "surname", "family_name", "familyname", "lname"],
+  company: ["company", "company_name", "companyname", "organization", "org", "company_name_for_emails"],
+  type: ["title", "job_title", "jobtitle", "role", "type", "position"],
+  email: ["email", "email_address", "emailaddress", "e_mail", "primary_email", "secondary_email", "tertiary_email"],
+  phone: ["phone", "phone_number", "phonenumber", "telephone", "mobile", "mobile_phone", "work_direct_phone", "corporate_phone", "other_phone", "home_phone", "work_phone"],
+  neighbourhood: ["city", "neighbourhood", "neighborhood", "location", "company_city", "town", "region"],
+  found_via: ["found_via", "source", "lead_source", "origin"],
 };
+
+const SMART_HEADER_MAP: Record<string, string> = {};
+Object.entries(FIELD_ALIASES).forEach(([field, aliases]) => {
+  aliases.forEach((alias) => {
+    SMART_HEADER_MAP[alias] = field;
+  });
+});
 
 function mapRow(headers: string[], values: string[]): Record<string, string> {
   const row: Record<string, string> = {};
   headers.forEach((h, i) => {
-    const key = APOLLO_MAP[h.trim()] ?? h.trim().toLowerCase().replace(/\s+/g, "_");
-    row[key] = values[i]?.trim() ?? "";
+    const normalized = normalizeHeader(h);
+    const field = SMART_HEADER_MAP[normalized];
+    const value = values[i]?.trim() ?? "";
+    if (field) {
+      // First non-empty wins when multiple columns map to same field (e.g. several phone columns)
+      if (row[field] === undefined) row[field] = value || "";
+      else if (value.trim() && !(row[field]?.trim())) row[field] = value;
+    } else {
+      const fallbackKey = normalized || `col_${i}`;
+      row[fallbackKey] = value;
+    }
   });
   return row;
 }
 
 function mapTitleToType(title: string): string {
   const t = title.toLowerCase();
-  if (t.includes("lawyer") || t.includes("estate")) return "estate_lawyer";
-  if (t.includes("realtor")) return "realtor";
+  // Check realtor first — "Real Estate Agent" must not match "estate" -> estate_lawyer
+  if (t.includes("realtor") || (t.includes("real estate") && t.includes("agent"))) return "realtor";
+  if (t.includes("lawyer")) return "estate_lawyer";
   if (t.includes("property") || t.includes("manager")) return "property_manager";
   return "other";
 }
@@ -179,7 +209,7 @@ export default function ImportContactsPage() {
             <CardHeader>
               <CardTitle className="text-base">Upload CSV</CardTitle>
               <CardDescription>
-                Apollo-style columns: First Name, Last Name, Company, Title, Email, Phone, City
+                Accepts any CSV: columns are auto-mapped by name (e.g. First Name, Company Name, Email, Phone, City, Title)
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -211,9 +241,10 @@ export default function ImportContactsPage() {
                 </div>
                 <Button
                   onClick={startImport}
+                  loading={importing}
                   disabled={importing || newCount === 0}
                 >
-                  {importing ? "Importing..." : `Import ${newCount} contacts`}
+                  {importing ? "Importing…" : `Import ${newCount} contacts`}
                 </Button>
               </CardHeader>
               <CardContent>
@@ -266,8 +297,8 @@ export default function ImportContactsPage() {
           </DialogHeader>
           <DialogFooter>
             <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
-            <Button onClick={handleImport} disabled={importing}>
-              {importing ? "Importing..." : "Import"}
+            <Button onClick={handleImport} loading={importing}>
+              {importing ? "Importing…" : "Import"}
             </Button>
           </DialogFooter>
         </DialogContent>

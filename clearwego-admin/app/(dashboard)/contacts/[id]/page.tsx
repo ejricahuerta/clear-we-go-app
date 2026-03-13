@@ -89,6 +89,8 @@ export default function ContactProfilePage() {
   const [error, setError] = useState<string | null>(null);
   const [logEmailNum, setLogEmailNum] = useState<number | null>(null);
   const [convertOpen, setConvertOpen] = useState(false);
+  const [converting, setConverting] = useState(false);
+  const [markDeadLoading, setMarkDeadLoading] = useState(false);
   const [logOutreachOpen, setLogOutreachOpen] = useState(false);
   const [markDeadOpen, setMarkDeadOpen] = useState(false);
 
@@ -155,7 +157,7 @@ export default function ContactProfilePage() {
   };
 
   const handleConvert = () => {
-    setConvertOpen(false);
+    setConverting(true);
     fetch("/api/contacts/convert", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -164,13 +166,15 @@ export default function ContactProfilePage() {
       .then((res) => res.json())
       .then((data) => {
         if (data.error) throw new Error(data.error);
+        setConvertOpen(false);
         if (data.clientId) router.push(`/clients/${data.clientId}`);
       })
-      .catch((e) => setError(e.message));
+      .catch((e) => setError(e.message))
+      .finally(() => setConverting(false));
   };
 
   const handleMarkDead = () => {
-    setMarkDeadOpen(false);
+    setMarkDeadLoading(true);
     fetch(`/api/contacts/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -179,10 +183,12 @@ export default function ContactProfilePage() {
       .then((res) => res.json())
       .then((data) => {
         if (data.error) throw new Error(data.error);
+        setMarkDeadOpen(false);
         setContact(data);
         setForm((f) => ({ ...f, status: "dead" }));
       })
-      .catch((e) => setError(e.message));
+      .catch((e) => setError(e.message))
+      .finally(() => setMarkDeadLoading(false));
   };
 
   if (loading) {
@@ -298,7 +304,7 @@ export default function ContactProfilePage() {
               <Textarea id="notes" value={form.notes ?? ""} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value || null }))} rows={3} />
             </div>
           </div>
-          <Button onClick={handleSave} disabled={saving}>{saving ? "Saving..." : "Save changes"}</Button>
+          <Button onClick={handleSave} loading={saving}>{saving ? "Saving…" : "Save changes"}</Button>
         </CardContent>
       </Card>
         </div>
@@ -312,8 +318,8 @@ export default function ContactProfilePage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button variant="outline" size="sm" onClick={() => setLogOutreachOpen(true)} disabled={logEmailNum !== null}>
-                {logEmailNum !== null ? "Logging..." : "Log outreach"}
+              <Button variant="outline" size="sm" onClick={() => setLogOutreachOpen(true)} loading={logEmailNum !== null}>
+                {logEmailNum !== null ? "Logging…" : "Log outreach"}
               </Button>
             </CardContent>
           </Card>
@@ -350,7 +356,7 @@ export default function ContactProfilePage() {
           </DialogHeader>
           <DialogFooter className="gap-2 sm:gap-0">
             <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
-            <Button onClick={handleConvert}>Confirm</Button>
+            <Button onClick={handleConvert} loading={converting}>{converting ? "Converting…" : "Confirm"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -384,7 +390,7 @@ export default function ContactProfilePage() {
           </DialogHeader>
           <DialogFooter className="gap-2 sm:gap-0">
             <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
-            <Button variant="destructive" onClick={handleMarkDead}>Mark as closed</Button>
+            <Button variant="destructive" onClick={handleMarkDead} loading={markDeadLoading}>{markDeadLoading ? "Marking…" : "Mark as closed"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

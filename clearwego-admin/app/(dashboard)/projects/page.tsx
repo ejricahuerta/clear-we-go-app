@@ -22,6 +22,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 
 type Project = {
   id: string;
@@ -181,10 +182,8 @@ export default function ProjectsPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Client</TableHead>
-                    <TableHead>Service</TableHead>
-                    <TableHead>Address</TableHead>
                     <TableHead>Stage</TableHead>
+                    <TableHead>Client</TableHead>
                     <TableHead>Job date</TableHead>
                     <TableHead className="w-[80px]"></TableHead>
                   </TableRow>
@@ -193,14 +192,25 @@ export default function ProjectsPage() {
                   {projects.map((p) => (
                     <TableRow key={p.id}>
                       <TableCell>
-                        <Link href={`/clients/${p.client_id}`} className="text-primary hover:underline">{p.client_name ?? "-"}</Link>
+                        <Badge variant="secondary">{STAGE_LABELS[p.stage] ?? p.stage}</Badge>
                       </TableCell>
-                      <TableCell>{p.service_type?.replace(/_/g, " ")}</TableCell>
-                      <TableCell>{p.property_address}</TableCell>
-                      <TableCell>{STAGE_LABELS[p.stage] ?? p.stage}</TableCell>
+                      <TableCell>
+                        <div className="flex flex-col gap-0.5">
+                          <Link href={`/clients/${p.client_id}`} className="font-medium text-primary hover:underline">
+                            {p.client_name ?? "-"}
+                          </Link>
+                          {(p.service_type || p.property_address) ? (
+                            <span className="text-xs text-muted-foreground">
+                              {[p.service_type?.replace(/_/g, " "), p.property_address].filter(Boolean).join(" · ")}
+                            </span>
+                          ) : null}
+                        </div>
+                      </TableCell>
                       <TableCell className="text-muted-foreground">{formatDate(p.job_date)}</TableCell>
                       <TableCell>
-                        <Link href={`/projects/${p.id}`}><Button variant="ghost" size="sm">View</Button></Link>
+                        <Link href={`/projects/${p.id}`}>
+                          <Button variant="ghost" size="sm">View</Button>
+                        </Link>
                       </TableCell>
                     </TableRow>
                   ))}

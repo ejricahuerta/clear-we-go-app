@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 
@@ -155,6 +156,7 @@ function SetupContent() {
             </p>
           )}
           <Button type="submit" className="w-full" disabled={submitting}>
+            {submitting && <Loader2 className="size-4 animate-spin" aria-hidden />}
             {submitting ? "Setting up…" : "Set up my account"}
           </Button>
         </form>

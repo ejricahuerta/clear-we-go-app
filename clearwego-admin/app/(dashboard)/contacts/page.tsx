@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/table";
 import { TablePagination } from "@/components/ui/table-pagination";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Mail, Copy, Check } from "lucide-react";
 
 type View = "all" | "follow_up" | "no_response" | "responded";
 
@@ -86,6 +87,15 @@ export default function ContactsPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const pageSizeOptions = [10, 20, 50, 100];
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const copyEmail = (email: string, id: string) => {
+    if (!email) return;
+    void navigator.clipboard.writeText(email).then(() => {
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2000);
+    });
+  };
 
   useEffect(() => {
     const params = new URLSearchParams();
@@ -236,10 +246,9 @@ export default function ContactsPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Company</TableHead>
-                    <TableHead>Type</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Email</TableHead>
                     <TableHead>Last contacted</TableHead>
                     <TableHead>Follow up</TableHead>
                     <TableHead className="w-[80px]"></TableHead>
@@ -249,14 +258,60 @@ export default function ContactsPage() {
                   {contacts.map((c) => (
                     <TableRow key={c.id}>
                       <TableCell>
-                        <Link href={`/contacts/${c.id}`} className="font-medium text-primary hover:underline">
-                          {c.first_name} {c.last_name}
-                        </Link>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">{c.company ?? "-"}</TableCell>
-                      <TableCell className="text-muted-foreground">{c.type ? c.type.replace(/_/g, " ") : "-"}</TableCell>
-                      <TableCell>
                         <Badge variant={STATUS_BADGE[c.status] ?? "secondary"}>{STATUS_LABEL[c.status] ?? c.status}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col gap-0.5">
+                          <Link href={`/contacts/${c.id}`} className="font-medium text-primary hover:underline">
+                            {c.first_name} {c.last_name}
+                          </Link>
+                          {(c.type || c.company) ? (
+                            <span className="text-xs text-muted-foreground">
+                              {[c.type?.replace(/_/g, " "), c.company].filter(Boolean).join(" · ")}
+                            </span>
+                          ) : null}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-sm">
+                        <div className="flex items-center justify-between gap-2">
+                          {c.email ? (
+                            <button
+                              type="button"
+                              onClick={() => copyEmail(c.email!, c.id)}
+                              title="Copy email"
+                              className="min-w-0 flex-1 cursor-pointer truncate text-left hover:text-foreground hover:underline focus:outline-none focus:underline"
+                            >
+                              {c.email}
+                            </button>
+                          ) : (
+                            <span className="flex-1">-</span>
+                          )}
+                          {c.email ? (
+                            <div className="flex shrink-0 items-center gap-0.5">
+                              <button
+                                type="button"
+                                onClick={() => copyEmail(c.email!, c.id)}
+                                title="Copy email"
+                                className="inline-flex rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground focus:outline-none"
+                              >
+                                {copiedId === c.id ? (
+                                  <Check className="h-4 w-4 text-green-600" />
+                                ) : (
+                                  <Copy className="h-4 w-4" />
+                                )}
+                              </button>
+                              <a
+                                href={`https://mail.google.com/mail/?view=cm&to=${encodeURIComponent(c.email)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                title="Open in Gmail"
+                                className="inline-flex rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                              >
+                                <Mail className="h-4 w-4" />
+                              </a>
+                            </div>
+                          ) : null}
+                        </div>
                       </TableCell>
                       <TableCell className="text-muted-foreground">{formatDate(c.last_contacted_date)}</TableCell>
                       <TableCell className="text-muted-foreground">{formatDate(c.follow_up_date)}</TableCell>

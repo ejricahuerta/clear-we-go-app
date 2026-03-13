@@ -193,7 +193,6 @@ export default function ProjectDetailPage() {
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Overview</CardTitle>
-          <CardDescription>Key details and stage. Edit full fields in the Details tab.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -358,8 +357,8 @@ export default function ProjectDetailPage() {
                   rows={3}
                 />
               </div>
-              <Button onClick={handleSaveDetails} disabled={saving}>
-                {saving ? "Saving..." : "Save"}
+              <Button onClick={handleSaveDetails} loading={saving}>
+                {saving ? "Saving…" : "Save"}
               </Button>
             </CardContent>
           </Card>
@@ -450,8 +449,8 @@ export default function ProjectDetailPage() {
                   />
                 </div>
               </div>
-              <Button onClick={handleSaveAccess} disabled={saving}>
-                {saving ? "Saving..." : "Save access"}
+              <Button onClick={handleSaveAccess} loading={saving}>
+                {saving ? "Saving…" : "Save access"}
               </Button>
             </CardContent>
           </Card>
@@ -496,8 +495,8 @@ export default function ProjectDetailPage() {
                       </ul>
                     )}
                   </div>
-                  <Button onClick={handleSaveCrew} disabled={crewSaving || crewData.all.length === 0}>
-                    {crewSaving ? "Saving..." : "Save crew"}
+                  <Button onClick={handleSaveCrew} loading={crewSaving} disabled={crewSaving || crewData.all.length === 0}>
+                    {crewSaving ? "Saving…" : "Save crew"}
                   </Button>
                 </>
               ) : (

@@ -307,7 +307,7 @@ export default function ClientProfilePage() {
               <Textarea value={form.notes ?? ""} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value || null }))} rows={3} />
             </div>
           </div>
-          <Button onClick={handleSave} disabled={saving}>{saving ? "Saving..." : "Save changes"}</Button>
+          <Button onClick={handleSave} loading={saving}>{saving ? "Saving…" : "Save changes"}</Button>
         </CardContent>
       </Card>
 

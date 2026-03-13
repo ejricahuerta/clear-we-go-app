@@ -121,7 +121,7 @@ export default function NewProjectPage() {
               <Input id="neighbourhood" value={neighbourhood} onChange={(e) => setNeighbourhood(e.target.value)} />
             </div>
             <div className="flex gap-2 pt-2">
-              <Button type="submit" disabled={submitting}>{submitting ? "Creating..." : "Create project"}</Button>
+              <Button type="submit" loading={submitting}>{submitting ? "Creating…" : "Create project"}</Button>
               <Link href="/projects">
                 <Button type="button" variant="outline">Cancel</Button>
               </Link>
