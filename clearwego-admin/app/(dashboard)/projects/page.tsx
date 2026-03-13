@@ -23,6 +23,13 @@ import {
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 type Project = {
   id: string;
@@ -63,6 +70,16 @@ export default function ProjectsPage() {
   const [stageFilter, setStageFilter] = useState("");
   const [serviceFilter, setServiceFilter] = useState("");
   const [search, setSearch] = useState("");
+  const [collapsedCols, setCollapsedCols] = useState<Set<string>>(new Set());
+
+  const toggleCol = (stage: string) => {
+    setCollapsedCols((prev) => {
+      const next = new Set(prev);
+      if (next.has(stage)) next.delete(stage);
+      else next.add(stage);
+      return next;
+    });
+  };
 
   useEffect(() => {
     const params = new URLSearchParams();
@@ -220,37 +237,85 @@ export default function ProjectsPage() {
           </Card>
         ) : (
           /* Kanban: full-page board, edge-to-edge, fills all space below header */
-          <div className="flex h-full min-h-0 flex-1 gap-0 overflow-hidden">
-            <div className="flex min-h-0 flex-1 gap-4 overflow-x-auto overflow-y-hidden px-4 pb-4 pt-2">
-              {STAGES_ORDER.map((stage) => (
-                <div
-                  key={stage}
-                  className="flex h-full min-h-0 w-72 shrink-0 flex-col rounded-lg border bg-muted/30"
-                >
-                  <div className="shrink-0 border-b bg-muted/50 px-3 py-2">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      {STAGE_LABELS[stage]}
-                    </p>
-                    <p className="text-sm font-medium">{(byStage[stage] ?? []).length}</p>
-                  </div>
-                  <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-2">
-                  {(byStage[stage] ?? []).map((p) => (
-                    <Link key={p.id} href={`/projects/${p.id}`}>
-                      <div
-                        className={`rounded-md border bg-background p-3 text-sm shadow-sm transition-colors hover:bg-muted/50 border-l-4 ${SERVICE_COLORS[p.service_type] ?? ""}`}
-                      >
-                        <p className="font-medium truncate">{p.client_name ?? "—"}</p>
-                        <p className="text-muted-foreground text-xs truncate">{p.service_type?.replace(/_/g, " ")}</p>
-                        <p className="text-muted-foreground text-xs truncate">{p.property_address}</p>
-                        <p className="mt-1 text-xs text-muted-foreground">{formatDate(p.job_date)}</p>
+          <TooltipProvider>
+            <div className="flex h-full min-h-0 flex-1 gap-0 overflow-hidden">
+              <div className="flex min-h-0 flex-1 gap-4 overflow-x-auto overflow-y-hidden px-4 pb-4 pt-2">
+                {STAGES_ORDER.map((stage) => {
+                  const isCollapsed = collapsedCols.has(stage);
+                  return (
+                    <div
+                      key={stage}
+                      className={`flex h-full min-h-0 shrink-0 flex-col rounded-lg border bg-muted/30 transition-[width] duration-300 ease-in-out ${isCollapsed ? "w-12" : "w-72"}`}
+                    >
+                      <div className="flex shrink-0 items-center justify-between gap-1 border-b bg-muted/50 px-2 py-2">
+                        {isCollapsed ? (
+                          <div className="flex flex-1 flex-col items-center gap-0.5">
+                            <p className="text-[10px] font-semibold uppercase leading-tight text-muted-foreground [writing-mode:vertical-rl] [text-orientation:mixed]">
+                              {STAGE_LABELS[stage]}
+                            </p>
+                            <p className="text-xs font-medium">{(byStage[stage] ?? []).length}</p>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7"
+                                  onClick={() => toggleCol(stage)}
+                                  aria-label={`Expand ${STAGE_LABELS[stage]} column`}
+                                >
+                                  <ChevronRight className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent side="right">Expand column</TooltipContent>
+                            </Tooltip>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="min-w-0 flex-1">
+                              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground truncate">
+                                {STAGE_LABELS[stage]}
+                              </p>
+                              <p className="text-sm font-medium">{(byStage[stage] ?? []).length}</p>
+                            </div>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7 shrink-0"
+                                  onClick={() => toggleCol(stage)}
+                                  aria-label={`Collapse ${STAGE_LABELS[stage]} column`}
+                                >
+                                  <ChevronLeft className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Collapse column</TooltipContent>
+                            </Tooltip>
+                          </>
+                        )}
                       </div>
-                    </Link>
-                  ))}
-                  </div>
-                </div>
-              ))}
+                      {!isCollapsed && (
+                        <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-2 animate-in fade-in slide-in-from-left-2 duration-200">
+                          {(byStage[stage] ?? []).map((p) => (
+                            <Link key={p.id} href={`/projects/${p.id}`}>
+                              <div
+                                className={`rounded-md border bg-background p-3 text-sm shadow-sm transition-colors hover:bg-muted/50 border-l-4 ${SERVICE_COLORS[p.service_type] ?? ""}`}
+                              >
+                                <p className="font-medium truncate">{p.client_name ?? "—"}</p>
+                                <p className="text-muted-foreground text-xs truncate">{p.service_type?.replace(/_/g, " ")}</p>
+                                <p className="text-muted-foreground text-xs truncate">{p.property_address}</p>
+                                <p className="mt-1 text-xs text-muted-foreground">{formatDate(p.job_date)}</p>
+                              </div>
+                            </Link>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          </TooltipProvider>
         )}
       </div>
     </div>
