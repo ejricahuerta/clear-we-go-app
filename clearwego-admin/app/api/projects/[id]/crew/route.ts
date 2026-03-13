@@ -101,7 +101,7 @@ export async function PUT(
   }
 
   if (ids.length > 0) {
-    const rows = ids.map((user_id) => ({
+    const rows = ids.map((user_id: string) => ({
       project_id: projectId,
       user_id,
       assigned_by: assignedBy,
