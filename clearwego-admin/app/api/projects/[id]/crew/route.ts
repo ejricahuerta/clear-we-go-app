@@ -71,7 +71,7 @@ export async function PUT(
 
   const body = await request.json();
   const user_ids = Array.isArray(body?.user_ids) ? body.user_ids : [];
-  const ids = user_ids.filter((id): id is string => typeof id === "string");
+  const ids = user_ids.filter((id: unknown): id is string => typeof id === "string");
 
   const service = createServiceRoleClient();
 
