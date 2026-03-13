@@ -25,8 +25,6 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Skeleton } from "@/components/ui/skeleton";
-
 type Client = {
   id: string;
   first_name: string;
@@ -192,27 +190,40 @@ export default function ClientProfilePage() {
 
   if (loading) {
     return (
-      <div className="p-6">
-        <Skeleton className="h-8 w-64 rounded-md mb-6" />
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_minmax(320px,400px)] gap-6 items-start">
-          <div className="space-y-6 min-w-0">
-            <Skeleton className="h-64 w-full rounded-xl" />
-            <Skeleton className="h-40 w-full rounded-xl" />
-          </div>
-          <div className="lg:sticky lg:top-6">
-            <Skeleton className="h-[28rem] w-full rounded-xl" />
-          </div>
-        </div>
+      <div className="flex min-h-[50vh] items-center justify-center p-6">
+        <p className="text-muted-foreground">Loading…</p>
       </div>
     );
   }
   if (!client) return <div className="p-6">Client not found.</div>;
 
-  const formatDate = (d: string) => new Date(d).toLocaleString();
-  const formatDateOnly = (d: string) => new Date(d).toLocaleDateString();
-  const formatTime = (d: string) => new Date(d).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
-  const formatDateLabel = (dateStr: string) => {
-    const d = new Date(dateStr);
+  const UNKNOWN_DATE_KEY = "__unknown__";
+  const safeDate = (d: string | null | undefined): Date | null => {
+    if (d == null || String(d).trim() === "") return null;
+    const parsed = new Date(d);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  };
+  const formatDate = (d: string | null | undefined): string => {
+    const parsed = safeDate(d);
+    return parsed ? parsed.toLocaleString() : "—";
+  };
+  /** Stable ISO date key (YYYY-MM-DD) for grouping; avoids locale re-parse issues. */
+  const formatDateOnly = (d: string | null | undefined): string => {
+    const parsed = safeDate(d);
+    if (!parsed) return UNKNOWN_DATE_KEY;
+    const y = parsed.getFullYear();
+    const m = String(parsed.getMonth() + 1).padStart(2, "0");
+    const day = String(parsed.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  };
+  const formatTime = (d: string | null | undefined): string => {
+    const parsed = safeDate(d);
+    return parsed ? parsed.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }) : "—";
+  };
+  const formatDateLabel = (dateKey: string): string => {
+    if (dateKey === UNKNOWN_DATE_KEY) return "Unknown date";
+    const d = new Date(dateKey + "T12:00:00");
+    if (Number.isNaN(d.getTime())) return "Unknown date";
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const yesterday = new Date(today);

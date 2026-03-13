@@ -127,3 +127,66 @@ export async function PATCH(
 
   return NextResponse.json(project);
 }
+
+/** DELETE: remove project (owner/admin only). Logs to client timeline then deletes. */
+export async function DELETE(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+  const supabase = await createClient();
+  const {
+    data: { user: authUser },
+  } = await supabase.auth.getUser();
+  if (!authUser) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { data: profile } = await supabase
+    .from("users")
+    .select("id, name, role")
+    .eq("auth_user_id", authUser.id)
+    .single();
+  if (!profile) {
+    return NextResponse.json({ error: "User profile not found" }, { status: 403 });
+  }
+  if (profile.role !== "owner" && profile.role !== "admin") {
+    return NextResponse.json({ error: "Only owner or admin can delete a project" }, { status: 403 });
+  }
+
+  const { data: project, error: fetchError } = await supabase
+    .from("projects")
+    .select("id, client_id, property_address, service_type")
+    .eq("id", id)
+    .single();
+
+  if (fetchError || !project) {
+    return NextResponse.json({ error: "Project not found" }, { status: 404 });
+  }
+
+  const clientId = (project as { client_id?: string }).client_id;
+  const address = (project as { property_address?: string }).property_address ?? "";
+  const serviceType = (project as { service_type?: string }).service_type ?? "";
+
+  const { error: timelineError } = await supabase.from("timeline_events").insert({
+    client_id: clientId,
+    project_id: id,
+    event_type: "project_deleted",
+    event_category: "project",
+    event_description: `Project deleted by ${profile.name}: ${serviceType.replace(/_/g, " ")} at ${address}`,
+    created_by_id: profile.id,
+    created_by_name: profile.name,
+    created_by_role: profile.role,
+  });
+  if (timelineError) {
+    return NextResponse.json({ error: timelineError.message }, { status: 500 });
+  }
+
+  const { error: deleteError } = await supabase.from("projects").delete().eq("id", id);
+
+  if (deleteError) {
+    return NextResponse.json({ error: deleteError.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ ok: true, client_id: clientId });
+}

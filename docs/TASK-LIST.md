@@ -60,8 +60,8 @@ Based on **docs/15-build-order.md**. Update checkboxes as you complete work.
 - [x] **13. Contacts module**  - list, filters, CSV import, profile, outreach, convert to client, analytics.
 - [x] **14. Client profiles**  - list, profile page, timeline (append-only), `logTimelineEvent`.
 - [x] **15. Projects CRUD**  - Kanban, list, detail (tabs), service fields, stage change, key/access.
-- [ ] **16. Service-specific checklists**  - auto-create on project, by service type.
-- [ ] **17. Crew assignment with availability**  - display availability, assign crew, notification.
+- [x] **16. Service-specific checklists**  - auto-create on project, by service type.
+- [x] **17. Crew assignment with availability**  - display availability, assign crew, notification.
 
 **Ref:** docs/04-contacts-module.md, 05-clients-and-timeline.md, 06-projects-module.md, 08-availability-system.md.
 

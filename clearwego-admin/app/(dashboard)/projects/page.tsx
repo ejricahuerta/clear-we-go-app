@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -21,9 +21,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronsRightLeft, ChevronRight } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -71,6 +70,7 @@ export default function ProjectsPage() {
   const [serviceFilter, setServiceFilter] = useState("");
   const [search, setSearch] = useState("");
   const [collapsedCols, setCollapsedCols] = useState<Set<string>>(new Set());
+  const hasAutoCollapsed = useRef(false);
 
   const toggleCol = (stage: string) => {
     setCollapsedCols((prev) => {
@@ -79,6 +79,11 @@ export default function ProjectsPage() {
       else next.add(stage);
       return next;
     });
+  };
+
+  const allCollapsed = collapsedCols.size === STAGES_ORDER.length;
+  const collapseOrExpandAll = () => {
+    setCollapsedCols(allCollapsed ? new Set() : new Set(STAGES_ORDER));
   };
 
   useEffect(() => {
@@ -98,6 +103,15 @@ export default function ProjectsPage() {
       .finally(() => setLoading(false));
   }, [stageFilter, serviceFilter, search]);
 
+  useEffect(() => {
+    if (loading || hasAutoCollapsed.current) return;
+    hasAutoCollapsed.current = true;
+    const empty = new Set(
+      STAGES_ORDER.filter((stage) => !projects.some((p) => p.stage === stage))
+    );
+    if (empty.size > 0) setCollapsedCols(empty);
+  }, [loading, projects]);
+
   const byStage = STAGES_ORDER.reduce((acc, stage) => {
     acc[stage] = projects.filter((p) => p.stage === stage);
     return acc;
@@ -108,7 +122,7 @@ export default function ProjectsPage() {
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
       {/* Same header pattern as Contacts / Clients: title, subtitle, primary action */}
-      <div className="space-y-4 p-6">
+      <div className="shrink-0 space-y-4 p-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-semibold">Projects</h1>
@@ -157,6 +171,21 @@ export default function ProjectsPage() {
               <SelectItem value="downsizing">Downsizing</SelectItem>
             </SelectContent>
           </Select>
+          {view === "kanban" && (
+            <Button variant="outline" size="sm" onClick={collapseOrExpandAll} className="ml-auto sm:ml-auto">
+              {allCollapsed ? (
+                <>
+                  <ChevronRight className="h-4 w-4 mr-1.5" />
+                  Expand all
+                </>
+              ) : (
+                <>
+                  <ChevronsRightLeft className="h-4 w-4 mr-1.5" />
+                  Collapse all
+                </>
+              )}
+            </Button>
+          )}
         </div>
       </div>
 
@@ -170,27 +199,8 @@ export default function ProjectsPage() {
       >
         {loading ? (
           <Card>
-            <CardContent className="p-0">
-              <div className="space-y-3 p-6">
-                <div className="flex gap-4 border-b pb-3">
-                  <Skeleton className="h-4 w-16" />
-                  <Skeleton className="h-4 w-20" />
-                  <Skeleton className="h-4 w-28" />
-                  <Skeleton className="h-4 w-20" />
-                  <Skeleton className="h-4 w-20" />
-                  <Skeleton className="h-4 w-14 ml-auto" />
-                </div>
-                {[1, 2, 3, 4, 5, 6, 8].map((i) => (
-                  <div key={i} className="flex gap-4 py-2">
-                    <Skeleton className="h-4 w-28" />
-                    <Skeleton className="h-4 w-24" />
-                    <Skeleton className="h-4 w-40" />
-                    <Skeleton className="h-4 w-24" />
-                    <Skeleton className="h-4 w-20" />
-                    <Skeleton className="h-8 w-14 ml-auto rounded-md" />
-                  </div>
-                ))}
-              </div>
+            <CardContent className="flex min-h-[200px] items-center justify-center p-6">
+              <p className="text-muted-foreground">Loading…</p>
             </CardContent>
           </Card>
         ) : view === "list" ? (
@@ -245,9 +255,9 @@ export default function ProjectsPage() {
                   return (
                     <div
                       key={stage}
-                      className={`flex h-full min-h-0 shrink-0 flex-col rounded-lg border bg-muted/30 transition-[width] duration-300 ease-in-out ${isCollapsed ? "w-12" : "w-72"}`}
+                      className={`flex h-full min-h-0 shrink-0 flex-col rounded-lg border bg-muted transition-[width] duration-300 ease-in-out ${isCollapsed ? "w-12" : "w-72"}`}
                     >
-                      <div className="flex shrink-0 items-center justify-between gap-1 border-b bg-muted/50 px-2 py-2">
+                      <div className="flex shrink-0 items-center justify-between gap-1 border-b bg-muted px-2 py-2">
                         {isCollapsed ? (
                           <div className="flex flex-1 flex-col items-center gap-0.5">
                             <p className="text-[10px] font-semibold uppercase leading-tight text-muted-foreground [writing-mode:vertical-rl] [text-orientation:mixed]">
@@ -286,7 +296,7 @@ export default function ProjectsPage() {
                                   onClick={() => toggleCol(stage)}
                                   aria-label={`Collapse ${STAGE_LABELS[stage]} column`}
                                 >
-                                  <ChevronLeft className="h-4 w-4" />
+                                  <ChevronsRightLeft className="h-4 w-4" />
                                 </Button>
                               </TooltipTrigger>
                               <TooltipContent>Collapse column</TooltipContent>
@@ -295,7 +305,7 @@ export default function ProjectsPage() {
                         )}
                       </div>
                       {!isCollapsed && (
-                        <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-2 animate-in fade-in slide-in-from-left-2 duration-200">
+                        <div className="min-h-0 flex-1 space-y-2 overflow-y-auto bg-muted p-2">
                           {(byStage[stage] ?? []).map((p) => (
                             <Link key={p.id} href={`/projects/${p.id}`}>
                               <div

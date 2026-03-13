@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import type { User } from "@supabase/supabase-js";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -12,6 +14,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { createClient } from "@/lib/supabase/client";
 
 const SEGMENTS: Record<string, string> = {
   "": "Home",
@@ -21,8 +24,32 @@ const SEGMENTS: Record<string, string> = {
   team: "Team",
 };
 
+function displayName(user: User): string {
+  const name = user.user_metadata?.full_name ?? user.user_metadata?.name;
+  if (name && typeof name === "string") return name;
+  if (user.email) return user.email;
+  return "Signed in";
+}
+
 export function DashboardHeader() {
   const pathname = usePathname();
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user: u } }) => {
+      setUser(u ?? null);
+      setLoading(false);
+    });
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
   const segments = pathname.split("/").filter(Boolean);
   const first = segments[0] ?? "";
   const second = segments[1];
@@ -61,6 +88,15 @@ export function DashboardHeader() {
           )}
         </BreadcrumbList>
       </Breadcrumb>
+      <div className="ml-auto flex items-center gap-2">
+        {loading ? (
+          <span className="text-sm text-muted-foreground">Loading…</span>
+        ) : user ? (
+          <span className="truncate text-sm text-muted-foreground max-w-[180px] sm:max-w-[240px]" title={user.email ?? undefined}>
+            {displayName(user)}
+          </span>
+        ) : null}
+      </div>
     </header>
   );
 }

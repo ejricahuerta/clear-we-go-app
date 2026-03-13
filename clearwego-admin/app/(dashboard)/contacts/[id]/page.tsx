@@ -24,7 +24,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Skeleton } from "@/components/ui/skeleton";
 
 type Contact = {
   id: string;
@@ -193,17 +192,8 @@ export default function ContactProfilePage() {
 
   if (loading) {
     return (
-      <div className="p-6">
-        <Skeleton className="h-8 w-48 rounded-md mb-6" />
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_minmax(280px,360px)] gap-6 items-start">
-          <div className="min-w-0">
-            <Skeleton className="h-80 w-full rounded-xl" />
-          </div>
-          <div className="space-y-6 lg:sticky lg:top-6">
-            <Skeleton className="h-28 w-full rounded-xl" />
-            <Skeleton className="h-24 w-full rounded-xl" />
-          </div>
-        </div>
+      <div className="flex min-h-[50vh] items-center justify-center p-6">
+        <p className="text-muted-foreground">Loading…</p>
       </div>
     );
   }

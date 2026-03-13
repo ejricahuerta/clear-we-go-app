@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { SUPABASE_AUTH_COOKIE_NAME } from "./cookie-name";
 
 /**
  * Supabase client for use in Server Components / Route Handlers.
@@ -15,6 +16,7 @@ export async function createClient() {
   }
 
   return createServerClient(url, anonKey, {
+    cookieOptions: { name: SUPABASE_AUTH_COOKIE_NAME },
     cookies: {
       getAll() {
         return cookieStore.getAll();

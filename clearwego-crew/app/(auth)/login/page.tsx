@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,9 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 max-w-md mx-auto">
       <div className="w-full space-y-6">
+        <div className="flex justify-center">
+          <Image src="/icons/icon.png" alt="Clear We Go" width={80} height={80} className="object-contain" priority />
+        </div>
         <h1 className="text-xl font-semibold text-center">Clear We Go - Crew</h1>
         <p className="text-sm text-muted-foreground text-center">Sign in with your crew account</p>
 

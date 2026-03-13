@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { CHECKLIST_TEMPLATES } from "@/lib/checklist-templates";
 import { NextResponse } from "next/server";
 
 const STAGES = [
@@ -131,6 +132,21 @@ export async function POST(request: Request) {
   });
   if (timelineError) {
     return NextResponse.json({ error: timelineError.message }, { status: 500 });
+  }
+
+  // Auto-create service-specific checklist items (Task 16)
+  const template = CHECKLIST_TEMPLATES[service_type];
+  if (template?.length) {
+    const checklistRows = template.map((item_text, i) => ({
+      project_id: project.id,
+      service_type,
+      item_text,
+      sort_order: i + 1,
+    }));
+    const { error: checklistError } = await supabase.from("checklist_items").insert(checklistRows);
+    if (checklistError) {
+      return NextResponse.json({ error: checklistError.message }, { status: 500 });
+    }
   }
 
   return NextResponse.json({ ...project, client_id, service_type, property_address, stage: "inquiry" });

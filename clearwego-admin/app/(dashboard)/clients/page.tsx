@@ -12,7 +12,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Mail, Copy, Check } from "lucide-react";
 
 type Client = {
@@ -64,23 +63,8 @@ export default function ClientsPage() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="space-y-3">
-              <div className="flex gap-4 border-b pb-3">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-4 w-32" />
-                <Skeleton className="h-4 w-28" />
-                <Skeleton className="h-4 w-28" />
-                <Skeleton className="h-4 w-16 ml-auto" />
-              </div>
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="flex gap-4 py-2">
-                  <Skeleton className="h-4 w-36" />
-                  <Skeleton className="h-4 w-44" />
-                  <Skeleton className="h-4 w-28" />
-                  <Skeleton className="h-4 w-24" />
-                  <Skeleton className="h-8 w-14 ml-auto rounded-md" />
-                </div>
-              ))}
+            <div className="flex min-h-[200px] items-center justify-center py-8">
+              <p className="text-muted-foreground">Loading…</p>
             </div>
           ) : clients.length === 0 ? (
             <p className="text-muted-foreground py-8 text-center">No clients yet. Convert a contact to create one.</p>

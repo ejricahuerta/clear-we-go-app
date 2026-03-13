@@ -11,9 +11,11 @@ export default function DashboardLayout({
   return (
     <SidebarProvider>
       <AppSidebar />
-      <SidebarInset className="min-w-0 overflow-x-hidden">
+      <SidebarInset className="flex min-h-0 min-w-0 flex-1 flex-col">
         <DashboardHeader />
-        <AnimatedPageContent>{children}</AnimatedPageContent>
+        <div className="flex min-h-0 flex-1 flex-col overflow-auto overflow-x-hidden">
+          <AnimatedPageContent>{children}</AnimatedPageContent>
+        </div>
       </SidebarInset>
     </SidebarProvider>
   );
