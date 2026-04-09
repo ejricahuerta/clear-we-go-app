@@ -71,6 +71,7 @@ See 04-contacts-module.md for full spec.
 Quick summary:
 - Stats bar (this month performance)
 - View tabs: All | Follow Up Today | No Response | Responded
+- Add contact button (opens modal to enter one contact; POST /api/contacts)
 - CSV import button
 - Sortable filterable list
 - Batch actions

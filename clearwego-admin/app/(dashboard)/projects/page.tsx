@@ -2,6 +2,20 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import {
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  closestCorners,
+  useSensor,
+  useSensors,
+  useDraggable,
+  useDroppable,
+  type DragEndEvent,
+  type DragOverEvent,
+  type DragStartEvent,
+} from "@dnd-kit/core";
+import { CSS } from "@dnd-kit/utilities";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -71,6 +85,124 @@ const SERVICE_COLORS: Record<string, string> = {
   downsizing: "border-l-purple-500",
 };
 
+const stageDroppableId = (stage: string) => `stage:${stage}` as const;
+
+function KanbanDraggableProjectCard({
+  project,
+  formatDate,
+}: {
+  project: Project;
+  formatDate: (d: string | null) => string;
+}) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: project.id,
+    data: { type: "project", project },
+  });
+  const style = {
+    transform: CSS.Translate.toString(transform),
+    opacity: isDragging ? 0.35 : undefined,
+  };
+  return (
+    <div ref={setNodeRef} style={style} {...listeners} {...attributes} className="touch-none">
+      <Link href={`/projects/${project.id}`} className="block outline-none">
+        <div
+          className={`cursor-grab rounded-md border bg-background p-3 text-sm shadow-sm transition-colors hover:bg-muted/50 active:cursor-grabbing border-l-4 ${SERVICE_COLORS[project.service_type] ?? ""}`}
+        >
+          <p className="font-medium truncate">{project.client_name ?? "—"}</p>
+          <p className="text-muted-foreground text-xs truncate">
+            {project.service_type?.replace(/_/g, " ")}
+          </p>
+          <p className="text-muted-foreground text-xs truncate">{project.property_address}</p>
+          <p className="mt-1 text-xs text-muted-foreground">{formatDate(project.job_date)}</p>
+        </div>
+      </Link>
+    </div>
+  );
+}
+
+function KanbanStageColumn({
+  stage,
+  stageLabel,
+  items,
+  isCollapsed,
+  onToggleCollapse,
+  formatDate,
+}: {
+  stage: string;
+  stageLabel: string;
+  items: Project[];
+  isCollapsed: boolean;
+  onToggleCollapse: () => void;
+  formatDate: (d: string | null) => string;
+}) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: stageDroppableId(stage),
+  });
+
+  return (
+    <div
+      className={`flex h-full min-h-0 shrink-0 flex-col rounded-lg border bg-muted transition-[width] duration-300 ease-in-out ${isCollapsed ? "w-12" : "w-72"}`}
+    >
+      <div className="flex shrink-0 items-center justify-between gap-1 border-b bg-muted px-2 py-2">
+        {isCollapsed ? (
+          <div className="flex flex-1 flex-col items-center gap-0.5">
+            <p className="text-[10px] font-semibold uppercase leading-tight text-muted-foreground [writing-mode:vertical-rl] [text-orientation:mixed]">
+              {stageLabel}
+            </p>
+            <p className="text-xs font-medium">{items.length}</p>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  onClick={onToggleCollapse}
+                  aria-label={`Expand ${stageLabel} column`}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right">Expand column</TooltipContent>
+            </Tooltip>
+          </div>
+        ) : (
+          <>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground truncate">
+                {stageLabel}
+              </p>
+              <p className="text-sm font-medium">{items.length}</p>
+            </div>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 shrink-0"
+                  onClick={onToggleCollapse}
+                  aria-label={`Collapse ${stageLabel} column`}
+                >
+                  <ChevronsRightLeft className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Collapse column</TooltipContent>
+            </Tooltip>
+          </>
+        )}
+      </div>
+      <div
+        ref={setNodeRef}
+        className={`min-h-0 flex-1 bg-muted transition-colors ${isCollapsed ? "min-h-[4rem]" : "space-y-2 overflow-y-auto p-2"} ${isOver ? "bg-primary/10 ring-2 ring-inset ring-primary/25" : ""}`}
+      >
+        {!isCollapsed &&
+          items.map((p) => (
+            <KanbanDraggableProjectCard key={p.id} project={p} formatDate={formatDate} />
+          ))}
+      </div>
+    </div>
+  );
+}
+
 export default function ProjectsPage() {
   const [view, setView] = useState<"kanban" | "list">("kanban");
   const [projects, setProjects] = useState<Project[]>([]);
@@ -79,7 +211,14 @@ export default function ProjectsPage() {
   const [serviceFilter, setServiceFilter] = useState("");
   const [search, setSearch] = useState("");
   const [collapsedCols, setCollapsedCols] = useState<Set<string>>(new Set());
+  const [activeDragProject, setActiveDragProject] = useState<Project | null>(null);
   const hasAutoCollapsed = useRef(false);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 8 },
+    })
+  );
 
   const toggleCol = (stage: string) => {
     setCollapsedCols((prev) => {
@@ -128,6 +267,90 @@ export default function ProjectsPage() {
 
   const formatDate = (d: string | null) => (d ? new Date(d).toLocaleDateString() : "-");
 
+  const handleDragStart = (event: DragStartEvent) => {
+    const id = String(event.active.id);
+    const p = projects.find((x) => x.id === id);
+    setActiveDragProject(p ?? null);
+  };
+
+  const expandCollapsedNeighborsOfStage = (centerStage: string) => {
+    const idx = STAGES_ORDER.indexOf(centerStage);
+    if (idx === -1) return;
+    setCollapsedCols((prev) => {
+      const next = new Set(prev);
+      let changed = false;
+      if (idx > 0) {
+        const left = STAGES_ORDER[idx - 1];
+        if (next.has(left)) {
+          next.delete(left);
+          changed = true;
+        }
+      }
+      if (idx < STAGES_ORDER.length - 1) {
+        const right = STAGES_ORDER[idx + 1];
+        if (next.has(right)) {
+          next.delete(right);
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  };
+
+  const handleDragOver = (event: DragOverEvent) => {
+    const { over } = event;
+    if (!over) return;
+    const overId = String(over.id);
+    let stage: string | null = null;
+    if (overId.startsWith("stage:")) {
+      stage = overId.slice("stage:".length);
+    } else {
+      const hit = projects.find((p) => p.id === overId);
+      if (hit) stage = hit.stage;
+    }
+    if (stage && STAGES_ORDER.includes(stage)) {
+      expandCollapsedNeighborsOfStage(stage);
+    }
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    setActiveDragProject(null);
+    const { active, over } = event;
+    if (!over) return;
+    const overId = String(over.id);
+    let newStage: string | null = null;
+    if (overId.startsWith("stage:")) {
+      newStage = overId.slice("stage:".length);
+    } else {
+      const overProject = projects.find((p) => p.id === overId);
+      if (overProject) newStage = overProject.stage;
+    }
+    if (!newStage || !STAGES_ORDER.includes(newStage)) return;
+    const projectId = String(active.id);
+    const project = projects.find((p) => p.id === projectId);
+    if (!project || project.stage === newStage) return;
+
+    const prevStage = project.stage;
+    setProjects((prev) =>
+      prev.map((p) => (p.id === projectId ? { ...p, stage: newStage } : p))
+    );
+
+    fetch(`/api/projects/${projectId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ stage: newStage }),
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data?.error) throw new Error(data.error);
+      })
+      .catch(() => {
+        setProjects((prev) =>
+          prev.map((p) => (p.id === projectId ? { ...p, stage: prevStage } : p))
+        );
+      });
+  };
+
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
       {/* Same header pattern as Contacts / Clients: title, subtitle, primary action */}
@@ -142,12 +365,16 @@ export default function ProjectsPage() {
           </Link>
         </div>
 
-        {/* Tabs and filters: same row as on other list pages */}
-        <div className="flex flex-wrap items-center gap-2">
-          <Tabs value={view} onValueChange={(v) => setView(v as "kanban" | "list")}>
-            <TabsList>
-              <TabsTrigger value="kanban">Kanban</TabsTrigger>
-              <TabsTrigger value="list">List</TabsTrigger>
+        {/* Tabs and filters: full-width stack on small screens */}
+        <div className="flex w-full min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+          <Tabs value={view} onValueChange={(v) => setView(v as "kanban" | "list")} className="w-full sm:w-auto">
+            <TabsList className="flex h-9 w-full gap-1 sm:w-auto">
+              <TabsTrigger value="kanban" className="flex-1 sm:flex-none">
+                Kanban
+              </TabsTrigger>
+              <TabsTrigger value="list" className="flex-1 sm:flex-none">
+                List
+              </TabsTrigger>
             </TabsList>
           </Tabs>
           <Input
@@ -155,10 +382,10 @@ export default function ProjectsPage() {
             placeholder="Search address..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-48"
+            className="h-9 min-w-0 w-full sm:w-48"
           />
           <Select value={stageFilter || "__all__"} onValueChange={(v) => setStageFilter(v === "__all__" ? "" : v)}>
-            <SelectTrigger className="w-[10rem]">
+            <SelectTrigger className="h-9 w-full sm:w-[10rem]">
               <SelectValue placeholder="All stages" />
             </SelectTrigger>
             <SelectContent>
@@ -169,7 +396,7 @@ export default function ProjectsPage() {
             </SelectContent>
           </Select>
           <Select value={serviceFilter || "__all__"} onValueChange={(v) => setServiceFilter(v === "__all__" ? "" : v)}>
-            <SelectTrigger className="w-[10rem]">
+            <SelectTrigger className="h-9 w-full sm:w-[10rem]">
               <SelectValue placeholder="All types" />
             </SelectTrigger>
             <SelectContent>
@@ -181,7 +408,12 @@ export default function ProjectsPage() {
             </SelectContent>
           </Select>
           {view === "kanban" && (
-            <Button variant="outline" size="sm" onClick={collapseOrExpandAll} className="ml-auto sm:ml-auto">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={collapseOrExpandAll}
+              className="h-9 w-full justify-center sm:ml-auto sm:w-auto"
+            >
               {allCollapsed ? (
                 <>
                   <ChevronRight className="h-4 w-4 mr-1.5" />
@@ -276,83 +508,48 @@ export default function ProjectsPage() {
         ) : (
           /* Kanban: full-page board, edge-to-edge, fills all space below header */
           <TooltipProvider>
-            <div className="flex h-full min-h-0 flex-1 gap-0 overflow-hidden">
-              <div className="flex min-h-0 flex-1 gap-4 overflow-x-auto overflow-y-hidden px-4 pb-4 pt-2">
-                {STAGES_ORDER.map((stage) => {
-                  const isCollapsed = collapsedCols.has(stage);
-                  return (
-                    <div
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCorners}
+              onDragStart={handleDragStart}
+              onDragOver={handleDragOver}
+              onDragEnd={handleDragEnd}
+              onDragCancel={() => setActiveDragProject(null)}
+            >
+              <div className="flex h-full min-h-0 flex-1 gap-0 overflow-hidden">
+                <div className="flex min-h-0 flex-1 gap-4 overflow-x-auto overflow-y-hidden px-4 pb-4 pt-2">
+                  {STAGES_ORDER.map((stage) => (
+                    <KanbanStageColumn
                       key={stage}
-                      className={`flex h-full min-h-0 shrink-0 flex-col rounded-lg border bg-muted transition-[width] duration-300 ease-in-out ${isCollapsed ? "w-12" : "w-72"}`}
-                    >
-                      <div className="flex shrink-0 items-center justify-between gap-1 border-b bg-muted px-2 py-2">
-                        {isCollapsed ? (
-                          <div className="flex flex-1 flex-col items-center gap-0.5">
-                            <p className="text-[10px] font-semibold uppercase leading-tight text-muted-foreground [writing-mode:vertical-rl] [text-orientation:mixed]">
-                              {STAGE_LABELS[stage]}
-                            </p>
-                            <p className="text-xs font-medium">{(byStage[stage] ?? []).length}</p>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-7 w-7"
-                                  onClick={() => toggleCol(stage)}
-                                  aria-label={`Expand ${STAGE_LABELS[stage]} column`}
-                                >
-                                  <ChevronRight className="h-4 w-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent side="right">Expand column</TooltipContent>
-                            </Tooltip>
-                          </div>
-                        ) : (
-                          <>
-                            <div className="min-w-0 flex-1">
-                              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground truncate">
-                                {STAGE_LABELS[stage]}
-                              </p>
-                              <p className="text-sm font-medium">{(byStage[stage] ?? []).length}</p>
-                            </div>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-7 w-7 shrink-0"
-                                  onClick={() => toggleCol(stage)}
-                                  aria-label={`Collapse ${STAGE_LABELS[stage]} column`}
-                                >
-                                  <ChevronsRightLeft className="h-4 w-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>Collapse column</TooltipContent>
-                            </Tooltip>
-                          </>
-                        )}
-                      </div>
-                      {!isCollapsed && (
-                        <div className="min-h-0 flex-1 space-y-2 overflow-y-auto bg-muted p-2">
-                          {(byStage[stage] ?? []).map((p) => (
-                            <Link key={p.id} href={`/projects/${p.id}`}>
-                              <div
-                                className={`rounded-md border bg-background p-3 text-sm shadow-sm transition-colors hover:bg-muted/50 border-l-4 ${SERVICE_COLORS[p.service_type] ?? ""}`}
-                              >
-                                <p className="font-medium truncate">{p.client_name ?? "—"}</p>
-                                <p className="text-muted-foreground text-xs truncate">{p.service_type?.replace(/_/g, " ")}</p>
-                                <p className="text-muted-foreground text-xs truncate">{p.property_address}</p>
-                                <p className="mt-1 text-xs text-muted-foreground">{formatDate(p.job_date)}</p>
-                              </div>
-                            </Link>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+                      stage={stage}
+                      stageLabel={STAGE_LABELS[stage] ?? stage}
+                      items={byStage[stage] ?? []}
+                      isCollapsed={collapsedCols.has(stage)}
+                      onToggleCollapse={() => toggleCol(stage)}
+                      formatDate={formatDate}
+                    />
+                  ))}
+                </div>
               </div>
-            </div>
+              <DragOverlay dropAnimation={{ duration: 200, easing: "ease" }}>
+                {activeDragProject ? (
+                  <div
+                    className={`pointer-events-none w-72 cursor-grabbing rounded-md border bg-background p-3 text-sm shadow-lg border-l-4 ${SERVICE_COLORS[activeDragProject.service_type] ?? ""}`}
+                  >
+                    <p className="font-medium truncate">{activeDragProject.client_name ?? "—"}</p>
+                    <p className="text-muted-foreground text-xs truncate">
+                      {activeDragProject.service_type?.replace(/_/g, " ")}
+                    </p>
+                    <p className="text-muted-foreground text-xs truncate">
+                      {activeDragProject.property_address}
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {formatDate(activeDragProject.job_date)}
+                    </p>
+                  </div>
+                ) : null}
+              </DragOverlay>
+            </DndContext>
           </TooltipProvider>
         )}
       </div>

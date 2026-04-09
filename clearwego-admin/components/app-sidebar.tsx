@@ -62,7 +62,7 @@ export function AppSidebar() {
             <SidebarMenuButton size="lg" asChild>
               <Link href="/">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg overflow-hidden shrink-0 bg-transparent">
-                  <Image src="/icons/icon.png" alt="Clear We Go" width={32} height={32} className="object-contain size-full bg-transparent" />
+                  <Image src="/icons/logo.png" alt="Clear We Go" width={32} height={32} className="object-contain size-full bg-transparent" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">Clear We Go</span>
