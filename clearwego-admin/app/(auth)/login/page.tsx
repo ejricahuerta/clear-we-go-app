@@ -87,7 +87,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex flex-col items-center justify-center p-6">
       <div className="w-full max-w-sm space-y-6">
         <div className="flex justify-center">
-          <Image src="/icons/icon.png" alt="Clear We Go" width={80} height={80} className="object-contain" priority />
+          <Image src="/icons/logo.png" alt="Clear We Go" width={80} height={80} className="object-contain" priority />
         </div>
         <h1 className="text-xl font-semibold text-center">Clear We Go - Admin</h1>
         <p className="text-sm text-muted-foreground text-center">Sign in to continue</p>

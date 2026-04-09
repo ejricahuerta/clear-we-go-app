@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { ContactKpisCard } from "@/components/contact-kpis-card";
 
 export default function Home() {
   return (
@@ -9,6 +10,8 @@ export default function Home() {
         <h1 className="text-2xl font-semibold text-foreground">Clear We Go</h1>
         <p className="text-muted-foreground mt-1">Admin</p>
       </div>
+
+      <ContactKpisCard />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Card>

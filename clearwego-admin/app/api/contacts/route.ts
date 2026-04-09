@@ -73,3 +73,56 @@ export async function GET(request: Request) {
 
   return NextResponse.json({ contacts: contacts ?? [], total: count ?? 0, page, pageSize });
 }
+const CONTACT_SELECT =
+  "id, first_name, last_name, company, type, email, phone, neighbourhood, found_via, status, email_1_sent, email_2_sent, email_3_sent, last_contacted_date, follow_up_date, converted_to_client, created_at";
+
+export async function POST(request: Request) {
+  const supabase = await createClient();
+  const {
+    data: { user: authUser },
+  } = await supabase.auth.getUser();
+  if (!authUser) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+
+  if (!body || typeof body !== "object") {
+    return NextResponse.json({ error: "Invalid body" }, { status: 400 });
+  }
+
+  const b = body as Record<string, unknown>;
+  const firstName = String(b.first_name ?? "").trim();
+  if (!firstName) {
+    return NextResponse.json({ error: "first_name is required" }, { status: 400 });
+  }
+
+  const lastName = String(b.last_name ?? "").trim();
+  const typeRaw = String(b.type ?? "");
+  const foundViaRaw = String(b.found_via ?? "");
+
+  const row = {
+    first_name: firstName,
+    last_name: lastName,
+    company: typeof b.company === "string" ? b.company.trim() || null : null,
+    type: CONTACT_TYPES.includes(typeRaw as (typeof CONTACT_TYPES)[number]) ? typeRaw : "other",
+    email: typeof b.email === "string" ? b.email.trim() || null : null,
+    phone: typeof b.phone === "string" ? b.phone.trim() || null : null,
+    neighbourhood: typeof b.neighbourhood === "string" ? b.neighbourhood.trim() || null : null,
+    found_via: FOUND_VIA.includes(foundViaRaw as (typeof FOUND_VIA)[number]) ? foundViaRaw : "apollo",
+    status: "new" as const,
+  };
+
+  const { data: contact, error } = await supabase.from("contacts").insert(row).select(CONTACT_SELECT).single();
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ contact });
+}

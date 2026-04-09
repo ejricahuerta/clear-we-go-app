@@ -34,7 +34,9 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import { FolderOpen, History } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import { ChevronRight, FolderOpen, History } from "lucide-react";
 
 type Client = {
   id: string;
@@ -98,6 +100,20 @@ const CATEGORY_LABEL: Record<string, string> = {
   finance: "Finance",
   review: "Review",
   system: "System",
+};
+
+/** Left accent on project rows; aligned with Projects kanban cards */
+const PROJECT_SERVICE_ACCENTS: Record<string, string> = {
+  estate_cleanout: "border-l-amber-500",
+  presale_clearout: "border-l-blue-500",
+  tenant_moveout: "border-l-green-500",
+  downsizing: "border-l-purple-500",
+};
+
+const formatProjectJobDate = (d: string | null) => {
+  if (!d) return "Not scheduled";
+  const parsed = new Date(d.length <= 10 ? `${d}T12:00:00` : d);
+  return Number.isNaN(parsed.getTime()) ? "—" : parsed.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 };
 
 const CLIENT_TYPES = [
@@ -351,13 +367,41 @@ export default function ClientProfilePage() {
               </EmptyContent>
             </Empty>
           ) : (
-            <ul className="space-y-2">
+            <ul className="space-y-3">
               {projects.map((p) => (
-                <li key={p.id} className="flex items-center justify-between py-2 border-b last:border-0 text-sm">
-                  <span className="font-medium">{p.service_type?.replace(/_/g, " ")}</span>
-                  <span className="text-muted-foreground">{p.property_address}</span>
-                  <span className="text-muted-foreground">({p.stage})</span>
-                  <Link href={`/projects/${p.id}`}><Button variant="ghost" size="sm">View</Button></Link>
+                <li key={p.id}>
+                  <Link
+                    href={`/projects/${p.id}`}
+                    aria-label={`Open project: ${p.service_type?.replace(/_/g, " ") ?? "project"}${p.property_address ? `, ${p.property_address}` : ""}`}
+                    className={cn(
+                      "group flex gap-3 rounded-lg border border-border/80 bg-card p-3 text-left shadow-sm transition-[border-color,box-shadow,background-color]",
+                      "hover:border-border hover:bg-muted/30 hover:shadow-md",
+                      "border-l-4",
+                      PROJECT_SERVICE_ACCENTS[p.service_type] ?? "border-l-muted-foreground/35"
+                    )}
+                  >
+                    <div className="min-w-0 flex-1 space-y-1.5">
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                        <span className="font-medium capitalize leading-snug text-foreground">
+                          {p.service_type?.replace(/_/g, " ") ?? "Project"}
+                        </span>
+                        <Badge variant="secondary" className="max-w-full shrink font-normal capitalize">
+                          <span className="truncate">{p.stage.replace(/_/g, " ")}</span>
+                        </Badge>
+                      </div>
+                      <p className="text-sm leading-snug text-muted-foreground break-words">
+                        {p.property_address?.trim() || "—"}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        <span className="font-medium text-foreground/80">Job date</span>
+                        <span className="mx-1.5 text-border">·</span>
+                        {formatProjectJobDate(p.job_date)}
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 items-center self-center text-muted-foreground transition-colors group-hover:text-foreground" aria-hidden>
+                      <ChevronRight className="size-5" />
+                    </div>
+                  </Link>
                 </li>
               ))}
             </ul>
