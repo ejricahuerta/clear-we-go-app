@@ -1,4 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none" stroke="#171717" stroke-width="24" stroke-linecap="round">
-  <rect width="512" height="512" rx="96" fill="#fafafa"/>
-  <text x="256" y="320" font-family="system-ui, sans-serif" font-size="240" font-weight="700" fill="#171717" text-anchor="middle">C</text>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#171717" stroke-linecap="round" stroke-width="24" viewBox="0 0 512 512"><rect width="512" height="512" fill="#fafafa" rx="96"/><text x="256" y="320" fill="#171717" font-family="system-ui, sans-serif" font-size="240" font-weight="700" text-anchor="middle">C</text></svg>
