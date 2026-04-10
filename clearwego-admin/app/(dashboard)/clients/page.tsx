@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -21,7 +22,10 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import { Mail, Copy, Check, Users } from "lucide-react";
+import { Mail, Check, Users, UserPlus } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { CLIENT_STATUS_LABELS, isClientStatus } from "@/lib/clients/status";
+import { AddClientDrawer } from "@/components/clients/add-client-drawer";
 
 type Client = {
   id: string;
@@ -31,14 +35,27 @@ type Client = {
   phone: string | null;
   neighbourhood: string | null;
   referral_source: string | null;
+  status?: string | null;
   created_at: string;
 };
 
-export default function ClientsPage() {
+function ClientsPageContent() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [addOpen, setAddOpen] = useState(false);
 
+  useEffect(() => {
+    if (searchParams.get("add") !== "1") return;
+    setAddOpen(true);
+    const next = new URLSearchParams(searchParams.toString());
+    next.delete("add");
+    const qs = next.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  }, [searchParams, pathname, router]);
   const copyEmail = (email: string, id: string) => {
     if (!email) return;
     void navigator.clipboard.writeText(email).then(() => {
@@ -47,7 +64,8 @@ export default function ClientsPage() {
     });
   };
 
-  useEffect(() => {
+  const refresh = () => {
+    setLoading(true);
     fetch("/api/clients")
       .then((res) => res.json())
       .then((data) => {
@@ -56,19 +74,31 @@ export default function ClientsPage() {
       })
       .catch(() => setClients([]))
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    refresh();
   }, []);
 
   return (
-    <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Clients</h1>
-        <p className="text-muted-foreground text-sm mt-0.5">Client profiles and timelines</p>
+    <div className="space-y-6 p-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-semibold">Clients</h1>
+          <p className="mt-0.5 text-sm text-muted-foreground">Client profiles and timelines</p>
+        </div>
+        <div className="flex shrink-0 flex-wrap items-center gap-2">
+          <Button type="button" onClick={() => setAddOpen(true)} className="gap-2">
+            <UserPlus className="size-4" />
+            Add client
+          </Button>
+        </div>
       </div>
 
       <Card>
         <CardHeader>
           <CardTitle className="text-base">All clients</CardTitle>
-          <CardDescription>Convert contacts to create clients</CardDescription>
+          <CardDescription>Add clients or convert them from contacts</CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -80,11 +110,12 @@ export default function ClientsPage() {
                   <Users className="size-6" />
                 </EmptyMedia>
                 <EmptyTitle>No clients yet</EmptyTitle>
-                <EmptyDescription>Convert a contact to create one.</EmptyDescription>
+                <EmptyDescription>Add a client or convert a contact.</EmptyDescription>
               </EmptyHeader>
-              <EmptyContent>
+              <EmptyContent className="flex flex-wrap gap-2 justify-center">
+                <Button onClick={() => setAddOpen(true)}>Add client</Button>
                 <Link href="/contacts">
-                  <Button>View contacts</Button>
+                  <Button variant="outline">View contacts</Button>
                 </Link>
               </EmptyContent>
             </Empty>
@@ -93,9 +124,10 @@ export default function ClientsPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
+                  <TableHead>Status</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Phone</TableHead>
-                  <TableHead className="w-[80px]"></TableHead>
+                  <TableHead className="w-[200px] text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -106,58 +138,52 @@ export default function ClientsPage() {
                         <Link href={`/clients/${c.id}`} className="font-medium text-primary hover:underline">
                           {c.first_name} {c.last_name}
                         </Link>
-                        {(c.referral_source || c.neighbourhood) ? (
+                        {c.referral_source || c.neighbourhood ? (
                           <span className="text-xs text-muted-foreground">
                             {[c.referral_source, c.neighbourhood].filter(Boolean).join(" · ")}
                           </span>
                         ) : null}
                       </div>
                     </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary" className="font-normal">
+                        {c.status && isClientStatus(c.status) ? CLIENT_STATUS_LABELS[c.status] : c.status ?? "—"}
+                      </Badge>
+                    </TableCell>
                     <TableCell className="text-muted-foreground text-sm">
-                      <div className="flex items-center justify-between gap-2">
-                        {c.email ? (
+                      {c.email ? (
+                        <div className="flex min-w-0 items-center gap-1.5">
+                          <a
+                            href={`https://mail.google.com/mail/?view=cm&to=${encodeURIComponent(c.email)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title="Open in Gmail"
+                            className="inline-flex shrink-0 rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                          >
+                            <Mail className="h-4 w-4" />
+                          </a>
                           <button
                             type="button"
                             onClick={() => copyEmail(c.email!, c.id)}
                             title="Copy email"
-                            className="min-w-0 flex-1 cursor-pointer truncate text-left hover:text-foreground hover:underline focus:outline-none focus:underline"
+                            className="min-w-0 cursor-pointer truncate text-left hover:text-foreground hover:underline focus:outline-none focus:underline inline-flex items-center gap-1"
                           >
-                            {c.email}
+                            <span className="truncate">{c.email}</span>
+                            {copiedId === c.id ? (
+                              <Check className="h-3.5 w-3.5 shrink-0 text-green-600" aria-hidden />
+                            ) : null}
                           </button>
-                        ) : (
-                          <span className="flex-1">-</span>
-                        )}
-                        {c.email ? (
-                          <div className="flex shrink-0 items-center gap-0.5">
-                            <button
-                              type="button"
-                              onClick={() => copyEmail(c.email!, c.id)}
-                              title="Copy email"
-                              className="inline-flex rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground focus:outline-none"
-                            >
-                              {copiedId === c.id ? (
-                                <Check className="h-4 w-4 text-green-600" />
-                              ) : (
-                                <Copy className="h-4 w-4" />
-                              )}
-                            </button>
-                            <a
-                              href={`https://mail.google.com/mail/?view=cm&to=${encodeURIComponent(c.email)}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              title="Open in Gmail"
-                              className="inline-flex rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
-                            >
-                              <Mail className="h-4 w-4" />
-                            </a>
-                          </div>
-                        ) : null}
-                      </div>
+                        </div>
+                      ) : (
+                        "-"
+                      )}
                     </TableCell>
                     <TableCell className="text-muted-foreground">{c.phone ?? "-"}</TableCell>
-                    <TableCell>
+                    <TableCell className="text-right">
                       <Link href={`/clients/${c.id}`}>
-                        <Button variant="ghost" size="sm">View</Button>
+                        <Button variant="ghost" size="sm">
+                          View
+                        </Button>
                       </Link>
                     </TableCell>
                   </TableRow>
@@ -167,6 +193,18 @@ export default function ClientsPage() {
           )}
         </CardContent>
       </Card>
+
+      <AddClientDrawer open={addOpen} onOpenChange={setAddOpen} onSuccess={refresh} />
     </div>
+  );
+}
+
+export default function ClientsPage() {
+  return (
+    <Suspense
+      fallback={<LoadingSpinner className="min-h-[200px]" message="Loading…" />}
+    >
+      <ClientsPageContent />
+    </Suspense>
   );
 }

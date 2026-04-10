@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { DeleteContactDialog, type DeleteContactTarget } from "@/components/contacts/delete-contact-dialog";
 
 type Contact = {
   id: string;
@@ -51,6 +52,7 @@ type Contact = {
   client_id: string | null;
   notes: string | null;
   created_at: string;
+  archived_at: string | null;
 };
 
 const TYPE_OPTIONS = [
@@ -65,17 +67,19 @@ const FOUND_VIA_OPTIONS = [
   { value: "linkedin", label: "LinkedIn" },
   { value: "realtor_ca", label: "Realtor.ca" },
   { value: "lsoo", label: "LSOO" },
+  { value: "quo", label: "Quo" },
   { value: "referral", label: "Referral" },
   { value: "other", label: "Other" },
 ];
 
-const STATUS_OPTIONS = ["new", "contacted", "responded", "converted", "dead"];
+const STATUS_OPTIONS = ["new", "contacted", "responded", "client", "archived", "reopened"] as const;
 const STATUS_LABEL: Record<string, string> = {
   new: "New",
   contacted: "Contacted",
   responded: "Responded",
-  converted: "Converted",
-  dead: "Closed",
+  client: "Client",
+  archived: "Archived",
+  reopened: "Reopened",
 };
 
 export default function ContactProfilePage() {
@@ -86,13 +90,13 @@ export default function ContactProfilePage() {
   const [form, setForm] = useState<Partial<Contact>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [statusSaving, setStatusSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [logEmailNum, setLogEmailNum] = useState<number | null>(null);
   const [convertOpen, setConvertOpen] = useState(false);
   const [converting, setConverting] = useState(false);
-  const [markDeadLoading, setMarkDeadLoading] = useState(false);
   const [logOutreachOpen, setLogOutreachOpen] = useState(false);
-  const [markDeadOpen, setMarkDeadOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<DeleteContactTarget | null>(null);
 
   const load = useCallback(() => {
     fetch(`/api/contacts/${id}`)
@@ -139,6 +143,24 @@ export default function ContactProfilePage() {
       .finally(() => setSaving(false));
   };
 
+  const handleSaveStatus = () => {
+    setStatusSaving(true);
+    setError(null);
+    fetch(`/api/contacts/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: form.status }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.error) throw new Error(data.error);
+        setContact(data);
+        setForm((f) => ({ ...f, status: data.status }));
+      })
+      .catch((e) => setError(e.message))
+      .finally(() => setStatusSaving(false));
+  };
+
   const handleLogOutreach = (emailNum: number) => {
     setLogOutreachOpen(false);
     setLogEmailNum(emailNum);
@@ -171,24 +193,6 @@ export default function ContactProfilePage() {
       })
       .catch((e) => setError(e.message))
       .finally(() => setConverting(false));
-  };
-
-  const handleMarkDead = () => {
-    setMarkDeadLoading(true);
-    fetch(`/api/contacts/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "dead" }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.error) throw new Error(data.error);
-        setMarkDeadOpen(false);
-        setContact(data);
-        setForm((f) => ({ ...f, status: "dead" }));
-      })
-      .catch((e) => setError(e.message))
-      .finally(() => setMarkDeadLoading(false));
   };
 
   if (loading) {
@@ -269,19 +273,6 @@ export default function ContactProfilePage() {
               <Label htmlFor="neighbourhood">Neighbourhood</Label>
               <Input id="neighbourhood" value={form.neighbourhood ?? ""} onChange={(e) => setForm((f) => ({ ...f, neighbourhood: e.target.value || null }))} />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
-              <Select value={form.status ?? ""} onValueChange={(v) => setForm((f) => ({ ...f, status: v }))}>
-                <SelectTrigger id="status">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  {STATUS_OPTIONS.map((s) => (
-                    <SelectItem key={s} value={s}>{STATUS_LABEL[s] ?? s}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
             <div className="sm:col-span-2 space-y-2">
               <Label htmlFor="response_notes">Response notes</Label>
               <Input id="response_notes" value={form.response_notes ?? ""} onChange={(e) => setForm((f) => ({ ...f, response_notes: e.target.value || null }))} />
@@ -314,20 +305,76 @@ export default function ContactProfilePage() {
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Actions</CardTitle>
-              <CardDescription>Convert to client or close this contact</CardDescription>
+              <CardDescription>
+                Update pipeline status, then save. Convert when you are ready to create a client profile.
+              </CardDescription>
             </CardHeader>
-            <CardContent className="flex flex-wrap gap-2">
-              {!contact.converted_to_client && contact.status !== "dead" && (
-                <>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="action-status">Status</Label>
+                <div className="flex items-end gap-2">
+                  <div className="min-w-0 flex-1">
+                    <Select value={form.status ?? ""} onValueChange={(v) => setForm((f) => ({ ...f, status: v }))}>
+                      <SelectTrigger id="action-status" className="w-full">
+                        <SelectValue placeholder="Status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {STATUS_OPTIONS.map((s) => (
+                          <SelectItem key={s} value={s}>
+                            {STATUS_LABEL[s] ?? s}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    className="shrink-0"
+                    onClick={handleSaveStatus}
+                    loading={statusSaving}
+                    disabled={statusSaving || form.status === contact.status}
+                  >
+                    {statusSaving ? "Saving…" : "Save"}
+                  </Button>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {!contact.converted_to_client && contact.status !== "archived" && (
                   <Button onClick={() => setConvertOpen(true)}>Convert to client</Button>
-                  <Button variant="outline" onClick={() => setMarkDeadOpen(true)}>Mark as closed</Button>
-                </>
-              )}
-              {contact.converted_to_client && contact.client_id && (
-                <Link href={`/clients/${contact.client_id}`}>
-                  <Button variant="outline">View client</Button>
-                </Link>
-              )}
+                )}
+                {contact.converted_to_client && contact.client_id && (
+                  <Link href={`/clients/${contact.client_id}`}>
+                    <Button variant="outline">View client</Button>
+                  </Link>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-destructive/30">
+            <CardHeader>
+              <CardTitle className="text-base text-destructive">Delete contact</CardTitle>
+              <CardDescription>
+                Permanently remove this contact. If they are linked to a client, that client and their projects will be
+                removed as well.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={() =>
+                  setDeleteTarget({
+                    id: contact.id,
+                    first_name: contact.first_name,
+                    last_name: contact.last_name,
+                    client_id: contact.client_id,
+                  })
+                }
+              >
+                Delete contact
+              </Button>
             </CardContent>
           </Card>
         </div>
@@ -367,20 +414,18 @@ export default function ContactProfilePage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={markDeadOpen} onOpenChange={setMarkDeadOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Mark as closed</DialogTitle>
-            <DialogDescription>
-              This contact will be marked as closed and removed from active outreach lists.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="gap-2 sm:gap-0">
-            <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
-            <Button variant="destructive" onClick={handleMarkDead} loading={markDeadLoading}>{markDeadLoading ? "Marking…" : "Mark as closed"}</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DeleteContactDialog
+        contact={deleteTarget}
+        open={deleteTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
+        onDeleted={() => router.push("/contacts")}
+        onArchived={() => {
+          setDeleteTarget(null);
+          load();
+        }}
+      />
     </div>
   );
 }

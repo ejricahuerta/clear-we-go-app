@@ -34,7 +34,9 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import { Users, ListChecks, History } from "lucide-react";
+import { Users, ListChecks, History, Eye, EyeOff } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { PROJECT_STAGE_LABELS, PROJECT_STAGES } from "@/lib/projects/stages";
 
 type Project = {
   id: string;
@@ -56,13 +58,11 @@ type Project = {
   payment_received: boolean;
   notes: string | null;
   created_at: string;
+  archived_at: string | null;
 };
 
-const STAGES = [
-  "inquiry", "walkthrough_booked", "quoted", "deposit_received",
-  "scheduled", "in_progress", "cleared", "report_sent", "review_requested", "closed",
-];
-const STAGE_LABELS: Record<string, string> = Object.fromEntries(STAGES.map((s) => [s, s.replace(/_/g, " ")]));
+const STAGES = [...PROJECT_STAGES] as string[];
+const STAGE_LABELS: Record<string, string> = { ...PROJECT_STAGE_LABELS };
 
 const ACCESS_TYPES = [
   { value: "key", label: "Key" },
@@ -129,11 +129,14 @@ export default function ProjectDetailPage() {
   const [stageChanging, setStageChanging] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [archiving, setArchiving] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [canManageProject, setCanManageProject] = useState(false);
   const [timelineEvents, setTimelineEvents] = useState<TimelineEvent[]>([]);
+  const [lockboxVisible, setLockboxVisible] = useState(false);
 
   const load = useCallback(() => {
-    Promise.all([
+    return Promise.all([
       fetch(`/api/projects/${id}`).then((r) => r.json()),
       fetch(`/api/projects/${id}/access`).then((r) => r.json()).catch(() => ({ access: null })),
       fetch(`/api/projects/${id}/crew`).then((r) => r.json()).catch(() => ({ crew: [], available: [], unavailable: [], all: [], job_date: null })),
@@ -161,7 +164,18 @@ export default function ProjectDetailPage() {
       .finally(() => setLoading(false));
   }, [id]);
 
-  useEffect(() => load(), [load]);
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  useEffect(() => {
+    fetch("/api/users/me")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data?.role === "owner" || data?.role === "admin") setCanManageProject(true);
+      })
+      .catch(() => setCanManageProject(false));
+  }, []);
 
   const handleChecklistToggle = (itemId: string, completed: boolean) => {
     setChecklistToggling(itemId);
@@ -199,6 +213,23 @@ export default function ProjectDetailPage() {
     }
   };
 
+  const handleArchiveProject = async () => {
+    setArchiving(true);
+    setDeleteError(null);
+    try {
+      const res = await fetch(`/api/projects/${id}/archive`, { method: "POST" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(typeof data?.error === "string" ? data.error : res.statusText || "Archive failed");
+      }
+      await load();
+    } catch (e) {
+      setDeleteError(e instanceof Error ? e.message : "Something went wrong");
+    } finally {
+      setArchiving(false);
+    }
+  };
+
   const handleStageChange = (newStage: string) => {
     setStageChanging(true);
     fetch(`/api/projects/${id}`, {
@@ -227,7 +258,7 @@ export default function ProjectDetailPage() {
       .then((r) => r.json())
       .then((data) => {
         if (data.error) throw new Error(data.error);
-        setProject(data);
+        return load();
       })
       .catch(console.error)
       .finally(() => setSaving(false));
@@ -329,20 +360,36 @@ export default function ProjectDetailPage() {
   return (
     <>
     <div className="p-6">
-      <div className="flex items-center justify-between gap-4 mb-6">
-        <h1 className="text-2xl font-semibold truncate">{project.property_address}</h1>
-        <Button
-          type="button"
-          variant="outline"
-          className="text-destructive border-destructive/50 hover:bg-destructive/10 hover:text-destructive shrink-0"
-          onClick={() => {
-            setDeleteError(null);
-            setDeleteDialogOpen(true);
-          }}
-        >
-          Delete project
-        </Button>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
+        <h1 className="text-2xl font-semibold truncate min-w-0">{project.property_address}</h1>
+        <div className="flex w-full items-center gap-3 shrink-0 sm:w-auto">
+          <Label
+            htmlFor="header-stage"
+            className="text-xs font-medium uppercase tracking-wider text-muted-foreground whitespace-nowrap shrink-0"
+          >
+            Status
+          </Label>
+          <Select value={project.stage} onValueChange={handleStageChange} disabled={stageChanging}>
+            <SelectTrigger id="header-stage" className="h-10 w-full min-w-0 sm:w-[14rem]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {STAGES.map((s) => (
+                <SelectItem key={s} value={s}>
+                  {STAGE_LABELS[s]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
+
+      {project.archived_at != null && (
+        <div className="rounded-lg border border-amber-500/40 bg-amber-50/80 dark:bg-amber-950/30 px-4 py-3 text-sm text-foreground mb-6">
+          <p className="font-medium">This project is archived</p>
+          <p className="text-muted-foreground mt-1">It does not appear on the main projects list. Open this page from the client record or a bookmark to view it.</p>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_minmax(320px,400px)] gap-6 items-start">
         <div className="space-y-6 min-w-0">
@@ -367,23 +414,6 @@ export default function ProjectDetailPage() {
             <div className="space-y-1">
               <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Neighbourhood</p>
               <p className="font-medium">{project.neighbourhood ?? "-"}</p>
-            </div>
-            <div className="space-y-1">
-              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Stage</p>
-              <Select
-                value={project.stage}
-                onValueChange={handleStageChange}
-                disabled={stageChanging}
-              >
-                <SelectTrigger id="stage" className="h-10 w-full max-w-[12rem]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {STAGES.map((s) => (
-                    <SelectItem key={s} value={s}>{STAGE_LABELS[s]}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
             <div className="space-y-1">
               <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Job date</p>
@@ -415,7 +445,11 @@ export default function ProjectDetailPage() {
         </CardContent>
       </Card>
 
-      <Tabs defaultValue="details" className="space-y-4">
+      <Tabs
+        key={id}
+        defaultValue={project.stage === "in_progress" ? "checklist" : "details"}
+        className="space-y-4"
+      >
         <TabsList>
           <TabsTrigger value="details">Details</TabsTrigger>
           <TabsTrigger value="crew">Crew</TabsTrigger>
@@ -427,7 +461,7 @@ export default function ProjectDetailPage() {
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Project fields</CardTitle>
-              <CardDescription>Address, dates, amounts, and notes</CardDescription>
+              <CardDescription>Address, dates, and amounts</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -510,16 +544,6 @@ export default function ProjectDetailPage() {
                   />
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="notes">Notes</Label>
-                <Textarea
-                  id="notes"
-                  className="min-h-24"
-                  value={project.notes ?? ""}
-                  onChange={(e) => setProject((p) => (p ? { ...p, notes: e.target.value || null } : p))}
-                  rows={3}
-                />
-              </div>
               <Button onClick={handleSaveDetails} loading={saving}>
                 {saving ? "Saving…" : "Save"}
               </Button>
@@ -571,14 +595,27 @@ export default function ProjectDetailPage() {
                 </div>
                 <div className="space-y-2 sm:col-span-2">
                   <Label htmlFor="lockbox_code">Lockbox code</Label>
-                  <Input
-                    type="password"
-                    id="lockbox_code"
-                    className="h-10"
-                    value={(access.lockbox_code as string) ?? ""}
-                    onChange={(e) => setAccess((a) => ({ ...a, lockbox_code: e.target.value }))}
-                    placeholder="Masked"
-                  />
+                  <div className="relative">
+                    <Input
+                      type={lockboxVisible ? "text" : "password"}
+                      id="lockbox_code"
+                      className="h-10 pr-10"
+                      value={(access.lockbox_code as string) ?? ""}
+                      onChange={(e) => setAccess((a) => ({ ...a, lockbox_code: e.target.value }))}
+                      placeholder="Enter code"
+                      autoComplete="off"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-0.5 top-1/2 h-9 w-9 -translate-y-1/2 text-muted-foreground"
+                      onClick={() => setLockboxVisible((v) => !v)}
+                      aria-label={lockboxVisible ? "Hide code" : "Show code"}
+                    >
+                      {lockboxVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                  </div>
                 </div>
                 <div className="space-y-2 sm:col-span-2">
                   <Label htmlFor="building_instructions">Building instructions</Label>
@@ -811,88 +848,160 @@ export default function ProjectDetailPage() {
 
         <TabsContent value="notes">
           <Card>
-            <CardContent className="pt-6">
-              <p className="text-sm text-muted-foreground">Project notes are in the Details tab.</p>
+            <CardHeader>
+              <CardTitle className="text-base">Notes</CardTitle>
+              <CardDescription>Internal notes for this project</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="notes">Notes</Label>
+                <Textarea
+                  id="notes"
+                  className="min-h-32"
+                  value={project.notes ?? ""}
+                  onChange={(e) => setProject((p) => (p ? { ...p, notes: e.target.value || null } : p))}
+                  rows={6}
+                />
+              </div>
+              <Button onClick={handleSaveDetails} loading={saving}>
+                {saving ? "Saving…" : "Save"}
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
         </div>
 
-        <div className="lg:sticky lg:top-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Job timeline</CardTitle>
-              <CardDescription>Activity for this project</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {Object.keys(timelineByDate).length === 0 ? (
-                <Empty className="py-8">
-                  <EmptyHeader>
-                    <EmptyMedia variant="icon">
-                      <History className="size-5" />
-                    </EmptyMedia>
-                    <EmptyTitle className="text-base">No events yet</EmptyTitle>
-                    <EmptyDescription>Stage changes and activity will appear here.</EmptyDescription>
-                  </EmptyHeader>
-                </Empty>
-              ) : (
-                <div className="space-y-5 max-h-[calc(100vh-12rem)] overflow-y-auto pr-1">
-                  {Object.entries(timelineByDate)
-                    .sort(([a], [b]) => (b > a ? 1 : -1))
-                    .map(([date, dayEvents]) => (
-                      <div key={date} className="space-y-2">
-                        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground sticky top-0 bg-card/95 backdrop-blur py-1 z-[1]">
-                          {formatDateLabel(date)}
-                        </p>
-                        <ul className="space-y-2">
-                          {dayEvents.map((e) => (
-                            <li
-                              key={e.id}
-                              className={`rounded-r-md border-l-4 pl-3 pr-3 py-2.5 text-sm ${CATEGORY_COLORS[e.event_category] ?? CATEGORY_COLORS.system}`}
-                              title={formatDateTime(e.created_at)}
-                            >
-                              <div className="flex items-start justify-between gap-2">
-                                <span className="font-medium leading-snug break-words">{e.event_description}</span>
-                                <span className="shrink-0 text-[10px] uppercase tracking-wide text-muted-foreground" title={e.event_category}>
-                                  {CATEGORY_LABEL[e.event_category] ?? e.event_category}
-                                </span>
-                              </div>
-                              <p className="text-xs text-muted-foreground mt-1.5 leading-snug">
-                                {e.created_by_name} · {e.created_by_role} · {formatTimeOnly(e.created_at)}
-                              </p>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    ))}
+        <div className="flex min-w-0 flex-col gap-6">
+          <div className="lg:sticky lg:top-6 lg:z-10">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Job timeline</CardTitle>
+                <CardDescription>Activity for this project</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {Object.keys(timelineByDate).length === 0 ? (
+                  <Empty className="py-8">
+                    <EmptyHeader>
+                      <EmptyMedia variant="icon">
+                        <History className="size-5" />
+                      </EmptyMedia>
+                      <EmptyTitle className="text-base">No events yet</EmptyTitle>
+                      <EmptyDescription>Stage changes and activity will appear here.</EmptyDescription>
+                    </EmptyHeader>
+                  </Empty>
+                ) : (
+                  <div className="space-y-5 max-h-[calc(100vh-12rem)] overflow-y-auto pr-1">
+                    {Object.entries(timelineByDate)
+                      .sort(([a], [b]) => (b > a ? 1 : -1))
+                      .map(([date, dayEvents]) => (
+                        <div key={date} className="space-y-2">
+                          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground sticky top-0 bg-card/95 backdrop-blur py-1 z-[1]">
+                            {formatDateLabel(date)}
+                          </p>
+                          <ul className="space-y-2">
+                            {dayEvents.map((e) => (
+                              <li
+                                key={e.id}
+                                className={`rounded-r-md border-l-4 pl-3 pr-3 py-2.5 text-sm ${CATEGORY_COLORS[e.event_category] ?? CATEGORY_COLORS.system}`}
+                                title={formatDateTime(e.created_at)}
+                              >
+                                <div className="flex items-start justify-between gap-2">
+                                  <span className="font-medium leading-snug break-words">{e.event_description}</span>
+                                  <span className="shrink-0 text-[10px] uppercase tracking-wide text-muted-foreground" title={e.event_category}>
+                                    {CATEGORY_LABEL[e.event_category] ?? e.event_category}
+                                  </span>
+                                </div>
+                                <p className="text-xs text-muted-foreground mt-1.5 leading-snug">
+                                  {e.created_by_name} · {e.created_by_role} · {formatTimeOnly(e.created_at)}
+                                </p>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {canManageProject ? (
+            <Card className="border-destructive/40">
+              <CardHeader>
+                <CardTitle className="text-base text-destructive">Danger zone</CardTitle>
+                <CardDescription>
+                  {project.archived_at
+                    ? "Permanently remove this archived project and related data. This cannot be undone."
+                    : "Archive to hide from the main list, or permanently delete the project and related checklist, crew, and access details."}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {deleteError && !deleteDialogOpen ? (
+                  <p className="text-sm font-medium text-destructive" role="alert">
+                    {deleteError}
+                  </p>
+                ) : null}
+                <div
+                  className={cn(
+                    "flex flex-wrap items-center gap-2",
+                    project.archived_at ? "justify-end" : "justify-between"
+                  )}
+                >
+                  {!project.archived_at ? (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="text-muted-foreground hover:text-foreground"
+                      onClick={() => void handleArchiveProject()}
+                      loading={archiving}
+                      disabled={archiving || deleting}
+                    >
+                      {archiving ? "Archiving…" : "Archive"}
+                    </Button>
+                  ) : null}
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => {
+                      setDeleteError(null);
+                      setDeleteDialogOpen(true);
+                    }}
+                    disabled={archiving}
+                  >
+                    Permanently Delete
+                  </Button>
                 </div>
-              )}
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          ) : null}
         </div>
       </div>
     </div>
 
     <Dialog open={deleteDialogOpen} onOpenChange={(open) => { setDeleteDialogOpen(open); if (!open) setDeleteError(null); }}>
-        <DialogContent>
+        <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Delete project?</DialogTitle>
-            <DialogDescription>
-              This will permanently remove this project and its checklist, crew assignments, and access details. The client timeline will show that the project was deleted. This cannot be undone.
+            <DialogTitle>Delete project permanently?</DialogTitle>
+            <DialogDescription asChild>
+              <p className="text-sm text-muted-foreground">
+                This removes the project and related checklist, crew assignments, and access details. The client timeline will record the deletion. This cannot be undone.
+              </p>
             </DialogDescription>
           </DialogHeader>
           {deleteError && (
-            <p className="text-sm text-destructive font-medium" role="alert">
+            <p className="text-sm font-medium text-destructive" role="alert">
               {deleteError}
             </p>
           )}
-          <DialogFooter>
+          <DialogFooter className="flex w-full flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button type="button" variant="outline" onClick={() => setDeleteDialogOpen(false)} disabled={deleting}>
               Cancel
             </Button>
             <Button type="button" variant="destructive" onClick={handleDeleteProject} loading={deleting} disabled={deleting}>
-              {deleting ? "Deleting…" : "Delete project"}
+              {deleting ? "Deleting…" : "Delete permanently"}
             </Button>
           </DialogFooter>
         </DialogContent>

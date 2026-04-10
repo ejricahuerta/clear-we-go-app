@@ -13,10 +13,7 @@ export async function GET() {
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
-  const { data: rows } = await supabase
-    .from("contacts")
-    .select("status, found_via")
-    .gte("created_at", startOfMonth);
+  const { data: rows } = await supabase.from("contacts").select("status, found_via").gte("created_at", startOfMonth);
 
   const added = rows?.length ?? 0;
   const byStatus = (rows ?? []).reduce(
@@ -26,9 +23,13 @@ export async function GET() {
     },
     {} as Record<string, number>
   );
-  const contactedCount = (byStatus.contacted ?? 0) + (byStatus.responded ?? 0) + (byStatus.converted ?? 0);
+  const contactedCount =
+    (byStatus.contacted ?? 0) +
+    (byStatus.reopened ?? 0) +
+    (byStatus.responded ?? 0) +
+    (byStatus.client ?? 0);
   const responded = byStatus.responded ?? 0;
-  const converted = byStatus.converted ?? 0;
+  const converted = byStatus.client ?? 0;
   const rate = added > 0 ? ((converted / added) * 100).toFixed(1) : "0";
 
   const bySource: Record<string, { added: number; responded: number; converted: number }> = {};
@@ -37,7 +38,7 @@ export async function GET() {
     if (!bySource[src]) bySource[src] = { added: 0, responded: 0, converted: 0 };
     bySource[src].added += 1;
     if (r.status === "responded") bySource[src].responded += 1;
-    if (r.status === "converted") bySource[src].converted += 1;
+    if (r.status === "client") bySource[src].converted += 1;
   }
 
   return NextResponse.json({

@@ -1,9 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
-import type { User } from "@supabase/supabase-js";
+import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -12,9 +11,18 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { createClient } from "@/lib/supabase/client";
+import { cn } from "@/lib/utils";
+import { Building2, FileUp, FolderKanban, Plus, UserPlus, Users } from "lucide-react";
 
 const SEGMENTS: Record<string, string> = {
   "": "Home",
@@ -24,31 +32,48 @@ const SEGMENTS: Record<string, string> = {
   team: "Team",
 };
 
-function displayName(user: User): string {
-  const name = user.user_metadata?.full_name ?? user.user_metadata?.name;
-  if (name && typeof name === "string") return name;
-  if (user.email) return user.email;
-  return "Signed in";
-}
+const ADD_ACTIONS = [
+  {
+    label: "Contact",
+    description: "Add a new contact",
+    href: "/contacts?add=1",
+    icon: UserPlus,
+  },
+  {
+    label: "Import contacts",
+    description: "Upload a CSV",
+    href: "/contacts/import",
+    icon: FileUp,
+  },
+  {
+    label: "Client",
+    description: "Add a client profile",
+    href: "/clients?add=1",
+    icon: Building2,
+  },
+  {
+    label: "Project",
+    description: "Start a new project",
+    href: "/projects/new",
+    icon: FolderKanban,
+  },
+  {
+    label: "Team member",
+    description: "Send a crew invite",
+    href: "/team?invite=1",
+    icon: Users,
+  },
+] as const;
 
 export function DashboardHeader() {
   const pathname = usePathname();
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+  const [addOpen, setAddOpen] = useState(false);
 
-  useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getUser().then(({ data: { user: u } }) => {
-      setUser(u ?? null);
-      setLoading(false);
-    });
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-    return () => subscription.unsubscribe();
-  }, []);
+  function navigateTo(href: string) {
+    setAddOpen(false);
+    router.push(href);
+  }
 
   const segments = pathname.split("/").filter(Boolean);
   const first = segments[0] ?? "";
@@ -89,13 +114,46 @@ export function DashboardHeader() {
         </BreadcrumbList>
       </Breadcrumb>
       <div className="ml-auto flex items-center gap-2">
-        {loading ? (
-          <span className="text-sm text-muted-foreground">Loading…</span>
-        ) : user ? (
-          <span className="truncate text-sm text-muted-foreground max-w-[180px] sm:max-w-[240px]" title={user.email ?? undefined}>
-            {displayName(user)}
-          </span>
-        ) : null}
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className="shrink-0 touch-manipulation"
+          aria-label="Add"
+          onClick={() => setAddOpen(true)}
+        >
+          <Plus className="size-4" aria-hidden />
+        </Button>
+        <Dialog open={addOpen} onOpenChange={setAddOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Add</DialogTitle>
+              <DialogDescription>Choose what you want to create. You&apos;ll go to the right screen with the form ready.</DialogDescription>
+            </DialogHeader>
+            <ul className="grid gap-1 pt-2">
+              {ADD_ACTIONS.map(({ label, description, href, icon: Icon }) => (
+                <li key={href}>
+                  <button
+                    type="button"
+                    onClick={() => navigateTo(href)}
+                    className={cn(
+                      "flex w-full items-start gap-3 rounded-lg border border-transparent px-3 py-2.5 text-left transition-colors",
+                      "hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    )}
+                  >
+                    <span className="flex size-9 shrink-0 items-center justify-center rounded-md border bg-muted/50">
+                      <Icon className="size-4 text-muted-foreground" aria-hidden />
+                    </span>
+                    <span className="min-w-0 pt-0.5">
+                      <span className="block text-sm font-medium">{label}</span>
+                      <span className="block text-xs text-muted-foreground">{description}</span>
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </DialogContent>
+        </Dialog>
       </div>
     </header>
   );

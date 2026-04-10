@@ -44,7 +44,7 @@ export async function POST(request: Request) {
   };
   updates[`email_${emailNumber}_sent`] = true;
   updates[`email_${emailNumber}_date`] = new Date().toISOString();
-  if (contact.status === "new") {
+  if (contact.status === "new" || contact.status === "reopened") {
     updates.status = "contacted";
   }
 

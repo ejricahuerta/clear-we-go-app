@@ -1,11 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
-import { CHECKLIST_TEMPLATES } from "@/lib/checklist-templates";
+import { insertProjectWithChecklist } from "@/lib/projects/insert-with-checklist";
+import { PROJECT_STAGES } from "@/lib/projects/stages";
 import { NextResponse } from "next/server";
 
-const STAGES = [
-  "inquiry", "walkthrough_booked", "quoted", "deposit_received",
-  "scheduled", "in_progress", "cleared", "report_sent", "review_requested", "closed",
-] as const;
+const STAGES = PROJECT_STAGES;
 const SERVICE_TYPES = ["estate_cleanout", "presale_clearout", "tenant_moveout", "downsizing"] as const;
 
 export async function GET(request: Request) {
@@ -31,9 +29,11 @@ export async function GET(request: Request) {
     .select(`
       id, client_id, service_type, property_size, property_address, neighbourhood,
       stage, walkthrough_date, job_date, start_time, quote_amount, invoice_amount, payment_received,
-      created_at,
-      clients!inner(first_name, last_name)
+      created_at, archived_at,
+      clients!inner(first_name, last_name, archived_at)
     `, { count: "exact" })
+    .is("archived_at", null)
+    .filter("clients.archived_at", "is", null)
     .order("created_at", { ascending: false });
 
   if (clientId) query = query.eq("client_id", clientId);
@@ -101,53 +101,41 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid service_type" }, { status: 400 });
   }
 
-  const insert: Record<string, unknown> = {
+  const { data: clientRow } = await supabase
+    .from("clients")
+    .select("id, archived_at")
+    .eq("id", client_id)
+    .single();
+  if (!clientRow) {
+    return NextResponse.json({ error: "Client not found" }, { status: 400 });
+  }
+  if (clientRow.archived_at != null) {
+    return NextResponse.json({ error: "Cannot create a project for an archived client" }, { status: 400 });
+  }
+
+  const created = await insertProjectWithChecklist(
+    supabase,
+    {
+      client_id,
+      service_type,
+      property_address,
+      neighbourhood: body?.neighbourhood?.trim() || null,
+      property_size: body?.property_size || null,
+      stage: "todo",
+      ...(typeof body?.quote_amount === "number" ? { quote_amount: body.quote_amount } : {}),
+    },
+    { id: profile.id, name: profile.name, role: profile.role }
+  );
+
+  if ("error" in created) {
+    return NextResponse.json({ error: created.error }, { status: 500 });
+  }
+
+  return NextResponse.json({
+    id: created.projectId,
     client_id,
     service_type,
     property_address,
-    neighbourhood: body?.neighbourhood?.trim() || null,
-    property_size: body?.property_size || null,
-    stage: "inquiry",
-  };
-
-  const { data: project, error: insertError } = await supabase
-    .from("projects")
-    .insert(insert)
-    .select("id")
-    .single();
-
-  if (insertError) {
-    return NextResponse.json({ error: insertError.message }, { status: 500 });
-  }
-
-  const { error: timelineError } = await supabase.from("timeline_events").insert({
-    client_id,
-    project_id: project.id,
-    event_type: "project_created",
-    event_category: "project",
-    event_description: `Project created by ${profile.name}: ${service_type.replace(/_/g, " ")} at ${property_address}`,
-    created_by_id: profile.id,
-    created_by_name: profile.name,
-    created_by_role: profile.role,
+    stage: "todo",
   });
-  if (timelineError) {
-    return NextResponse.json({ error: timelineError.message }, { status: 500 });
-  }
-
-  // Auto-create service-specific checklist items (Task 16)
-  const template = CHECKLIST_TEMPLATES[service_type];
-  if (template?.length) {
-    const checklistRows = template.map((item_text, i) => ({
-      project_id: project.id,
-      service_type,
-      item_text,
-      sort_order: i + 1,
-    }));
-    const { error: checklistError } = await supabase.from("checklist_items").insert(checklistRows);
-    if (checklistError) {
-      return NextResponse.json({ error: checklistError.message }, { status: 500 });
-    }
-  }
-
-  return NextResponse.json({ ...project, client_id, service_type, property_address, stage: "inquiry" });
 }

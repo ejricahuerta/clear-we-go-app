@@ -52,6 +52,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { PROJECT_STAGE_LABELS, PROJECT_STAGES } from "@/lib/projects/stages";
 
 type Project = {
   id: string;
@@ -69,14 +70,9 @@ type Project = {
   created_at: string;
 };
 
-const STAGES_ORDER = [
-  "inquiry", "walkthrough_booked", "quoted", "deposit_received",
-  "scheduled", "in_progress", "cleared", "report_sent", "review_requested", "closed",
-];
+const STAGES_ORDER = [...PROJECT_STAGES] as string[];
 
-const STAGE_LABELS: Record<string, string> = Object.fromEntries(
-  STAGES_ORDER.map((s) => [s, s.replace(/_/g, " ")])
-);
+const STAGE_LABELS: Record<string, string> = { ...PROJECT_STAGE_LABELS };
 
 const SERVICE_COLORS: Record<string, string> = {
   estate_cleanout: "border-l-amber-500",
@@ -266,6 +262,21 @@ export default function ProjectsPage() {
   }, {} as Record<string, Project[]>);
 
   const formatDate = (d: string | null) => (d ? new Date(d).toLocaleDateString() : "-");
+
+  /** Date-only `job_date` strings avoid UTC shift. */
+  const formatListJobDate = (d: string | null) => {
+    if (!d) return "—";
+    const parsed = new Date(d.length <= 10 ? `${d}T12:00:00` : d);
+    return Number.isNaN(parsed.getTime())
+      ? "—"
+      : parsed.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  };
+
+  const formatListJobTime = (t: string | null) => {
+    if (!t) return "—";
+    const s = String(t).trim();
+    return /^\d{1,2}:\d{2}/.test(s) ? s.slice(0, 5) : "—";
+  };
 
   const handleDragStart = (event: DragStartEvent) => {
     const id = String(event.active.id);
@@ -471,7 +482,9 @@ export default function ProjectsPage() {
                   <TableRow>
                     <TableHead>Stage</TableHead>
                     <TableHead>Client</TableHead>
-                    <TableHead>Job date</TableHead>
+                    <TableHead>Address</TableHead>
+                    <TableHead className="whitespace-nowrap">Job date</TableHead>
+                    <TableHead className="whitespace-nowrap">Start time</TableHead>
                     <TableHead className="w-[80px]"></TableHead>
                   </TableRow>
                 </TableHeader>
@@ -486,14 +499,24 @@ export default function ProjectsPage() {
                           <Link href={`/clients/${p.client_id}`} className="font-medium text-primary hover:underline">
                             {p.client_name ?? "-"}
                           </Link>
-                          {(p.service_type || p.property_address) ? (
-                            <span className="text-xs text-muted-foreground">
-                              {[p.service_type?.replace(/_/g, " "), p.property_address].filter(Boolean).join(" · ")}
+                          {p.service_type ? (
+                            <span className="text-xs capitalize text-muted-foreground">
+                              {p.service_type.replace(/_/g, " ")}
                             </span>
                           ) : null}
                         </div>
                       </TableCell>
-                      <TableCell className="text-muted-foreground">{formatDate(p.job_date)}</TableCell>
+                      <TableCell className="max-w-[220px] min-w-0">
+                        <span className="line-clamp-2 text-sm" title={p.property_address}>
+                          {p.property_address || "—"}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground tabular-nums whitespace-nowrap">
+                        {formatListJobDate(p.job_date)}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground tabular-nums whitespace-nowrap">
+                        {formatListJobTime(p.start_time)}
+                      </TableCell>
                       <TableCell>
                         <Link href={`/projects/${p.id}`}>
                           <Button variant="ghost" size="sm">View</Button>
