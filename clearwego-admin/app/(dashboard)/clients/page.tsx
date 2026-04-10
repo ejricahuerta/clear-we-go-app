@@ -82,17 +82,21 @@ function ClientsPageContent() {
 
   return (
     <div className="space-y-6 p-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 pr-2">
           <h1 className="text-2xl font-semibold">Clients</h1>
           <p className="mt-0.5 text-sm text-muted-foreground">Client profiles and timelines</p>
         </div>
-        <div className="flex shrink-0 flex-wrap items-center gap-2">
-          <Button type="button" onClick={() => setAddOpen(true)} className="gap-2">
-            <UserPlus className="size-4" />
-            Add client
-          </Button>
-        </div>
+        <Button
+          type="button"
+          onClick={() => setAddOpen(true)}
+          size="icon"
+          className="shrink-0 touch-manipulation gap-2 sm:h-9 sm:w-auto sm:px-4"
+          aria-label="Add client"
+        >
+          <UserPlus className="size-4" aria-hidden />
+          <span className="hidden sm:inline">Add client</span>
+        </Button>
       </div>
 
       <Card>

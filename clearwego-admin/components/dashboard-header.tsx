@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { useProjectBreadcrumb } from "@/components/project-breadcrumb-context";
 import { cn } from "@/lib/utils";
 import { Building2, FileUp, FolderKanban, Plus, UserPlus, Users } from "lucide-react";
 
@@ -69,6 +70,7 @@ export function DashboardHeader() {
   const pathname = usePathname();
   const router = useRouter();
   const [addOpen, setAddOpen] = useState(false);
+  const { projectBreadcrumb } = useProjectBreadcrumb();
 
   function navigateTo(href: string) {
     setAddOpen(false);
@@ -79,6 +81,8 @@ export function DashboardHeader() {
   const first = segments[0] ?? "";
   const second = segments[1];
   const label = SEGMENTS[first] ?? (first ? first.charAt(0).toUpperCase() + first.slice(1) : "Home");
+  const isProjectDetail =
+    first === "projects" && second !== undefined && second !== "new";
 
   return (
     <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-2 border-b bg-background px-3 md:h-16 md:px-4">
@@ -96,7 +100,41 @@ export function DashboardHeader() {
               <BreadcrumbPage className="truncate">{label}</BreadcrumbPage>
             </BreadcrumbItem>
           )}
-          {first && second && (
+          {first && second && isProjectDetail && projectBreadcrumb && (
+            <>
+              <BreadcrumbItem className="hidden md:block">
+                <BreadcrumbLink asChild>
+                  <Link href="/projects">{SEGMENTS.projects}</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator className="hidden md:block" />
+              <BreadcrumbItem className="hidden md:block max-w-[140px] sm:max-w-[200px]">
+                <BreadcrumbLink asChild>
+                  <Link href={`/clients/${projectBreadcrumb.clientId}`} className="truncate">
+                    {projectBreadcrumb.clientName}
+                  </Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator className="hidden md:block" />
+              <BreadcrumbItem className="min-w-0 max-w-[min(100%,28rem)]">
+                <BreadcrumbPage className="truncate">{projectBreadcrumb.propertyAddress}</BreadcrumbPage>
+              </BreadcrumbItem>
+            </>
+          )}
+          {first && second && isProjectDetail && !projectBreadcrumb && (
+            <>
+              <BreadcrumbItem className="hidden md:block">
+                <BreadcrumbLink asChild>
+                  <Link href="/projects">{SEGMENTS.projects}</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator className="hidden md:block" />
+              <BreadcrumbItem>
+                <BreadcrumbPage className="truncate">Project</BreadcrumbPage>
+              </BreadcrumbItem>
+            </>
+          )}
+          {first && second && !isProjectDetail && (
             <>
               <BreadcrumbItem className="hidden md:block">
                 <BreadcrumbLink asChild>

@@ -37,6 +37,11 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import {
+  TIMELINE_CATEGORY_LABEL_CLASS,
+  TIMELINE_EVENT_ROW_CLASS,
+  timelineDescriptionWithoutTrailingAttribution,
+} from "@/lib/timeline-display";
+import {
   AlertDialog,
   AlertDialogCancel,
   AlertDialogContent,
@@ -96,18 +101,6 @@ type TimelineEvent = {
   details: Record<string, unknown> | null;
 };
 
-const CATEGORY_COLORS: Record<string, string> = {
-  contact: "border-l-neutral-500 bg-neutral-50 dark:bg-neutral-900/50",
-  client: "border-l-blue-500 bg-blue-50/50 dark:bg-blue-950/30",
-  project: "border-l-purple-500 bg-purple-50/50 dark:bg-purple-950/30",
-  crew: "border-l-orange-500 bg-orange-50/50 dark:bg-orange-950/30",
-  communication: "border-l-green-500 bg-green-50/50 dark:bg-green-950/30",
-  document: "border-l-yellow-500 bg-yellow-50/50 dark:bg-yellow-950/30",
-  finance: "border-l-teal-500 bg-teal-50/50 dark:bg-teal-950/30",
-  review: "border-l-amber-500 bg-amber-50/50 dark:bg-amber-950/30",
-  system: "border-l-gray-400 bg-gray-50 dark:bg-gray-900/50",
-};
-
 const CATEGORY_LABEL: Record<string, string> = {
   contact: "Contact",
   client: "Client",
@@ -122,10 +115,10 @@ const CATEGORY_LABEL: Record<string, string> = {
 
 /** Left accent on project rows; aligned with Projects kanban cards */
 const PROJECT_SERVICE_ACCENTS: Record<string, string> = {
-  estate_cleanout: "border-l-amber-500",
-  presale_clearout: "border-l-blue-500",
-  tenant_moveout: "border-l-green-500",
-  downsizing: "border-l-purple-500",
+  estate_cleanout: "border-l-chart-2",
+  presale_clearout: "border-l-chart-1",
+  tenant_moveout: "border-l-chart-3",
+  downsizing: "border-l-chart-4",
 };
 
 const formatProjectJobDate = (d: string | null) => {
@@ -533,7 +526,7 @@ export default function ClientProfilePage() {
                     className={cn(
                       "group flex gap-3 rounded-lg border border-border/80 bg-card p-3 text-left shadow-sm transition-[border-color,box-shadow,background-color]",
                       "hover:border-border hover:bg-muted/30 hover:shadow-md",
-                      "border-l-4",
+                      "border-l-[3px]",
                       PROJECT_SERVICE_ACCENTS[p.service_type] ?? "border-l-muted-foreground/35"
                     )}
                   >
@@ -636,16 +629,18 @@ export default function ClientProfilePage() {
                         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground sticky top-0 bg-card/95 backdrop-blur py-1 z-[1]">
                           {formatDateLabel(date)}
                         </p>
-                        <ul className="space-y-2">
+                        <ul className="space-y-0">
                           {dayEvents.map((e) => (
                             <li
                               key={e.id}
-                              className={`rounded-r-md border-l-4 pl-3 pr-3 py-2.5 text-sm ${CATEGORY_COLORS[e.event_category] ?? CATEGORY_COLORS.system}`}
+                              className={TIMELINE_EVENT_ROW_CLASS}
                               title={formatDate(e.created_at)}
                             >
                               <div className="flex items-start justify-between gap-2">
-                                <span className="font-medium leading-snug break-words">{e.event_description}</span>
-                                <span className="shrink-0 text-[10px] uppercase tracking-wide text-muted-foreground" title={e.event_category}>
+                                <span className="break-words font-medium leading-snug text-foreground">
+                                  {timelineDescriptionWithoutTrailingAttribution(e.event_description, e.created_by_name)}
+                                </span>
+                                <span className={TIMELINE_CATEGORY_LABEL_CLASS} title={e.event_category}>
                                   {CATEGORY_LABEL[e.event_category] ?? e.event_category}
                                 </span>
                               </div>

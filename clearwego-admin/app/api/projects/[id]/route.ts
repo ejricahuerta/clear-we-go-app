@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { PROJECT_STAGES } from "@/lib/projects/stages";
+import { isAutoSidebarImportantStage, PROJECT_STAGES } from "@/lib/projects/stages";
 import { NextResponse } from "next/server";
 
 const STAGES = PROJECT_STAGES;
@@ -40,8 +40,11 @@ export async function GET(
   const client = Array.isArray(project.clients) ? project.clients[0] : project.clients;
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- omit clients from response
   const { clients, ...rest } = project as { clients?: unknown } & Record<string, unknown>;
+  const stage = String(rest.stage ?? "");
+  const pinnedRaw = Boolean(rest.pinned);
   return NextResponse.json({
     ...rest,
+    pinned: pinnedRaw || isAutoSidebarImportantStage(stage),
     client_name: client ? `${(client as { first_name: string }).first_name} ${(client as { last_name: string }).last_name}` : null,
   });
 }
@@ -76,6 +79,16 @@ export async function PATCH(
     }
   }
 
+  if (body?.pinned !== undefined) {
+    if (profile.role !== "owner" && profile.role !== "admin") {
+      return NextResponse.json({ error: "Only owner or admin can pin projects to the sidebar" }, { status: 403 });
+    }
+    if (typeof body.pinned !== "boolean") {
+      return NextResponse.json({ error: "pinned must be a boolean" }, { status: 400 });
+    }
+    updates.pinned = body.pinned;
+  }
+
   const newStage = body?.stage;
   if (newStage && STAGES.includes(newStage as (typeof STAGES)[number])) {
     updates.stage = newStage;
@@ -95,6 +108,11 @@ export async function PATCH(
   }
 
   const oldStage = existing.stage as string;
+  const nextStage = updates.stage !== undefined ? String(updates.stage) : oldStage;
+  if (isAutoSidebarImportantStage(nextStage)) {
+    updates.pinned = true;
+  }
+
   const { data: project, error: updateError } = await supabase
     .from("projects")
     .update(updates)

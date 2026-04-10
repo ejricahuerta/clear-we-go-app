@@ -68,18 +68,21 @@ type Project = {
   invoice_amount: number | null;
   payment_received: boolean;
   created_at: string;
+  pinned?: boolean;
 };
 
 const STAGES_ORDER = [...PROJECT_STAGES] as string[];
 
 const STAGE_LABELS: Record<string, string> = { ...PROJECT_STAGE_LABELS };
 
+/** Service-type accent; uses theme chart hues (forest / warm) instead of default palette */
 const SERVICE_COLORS: Record<string, string> = {
-  estate_cleanout: "border-l-amber-500",
-  presale_clearout: "border-l-blue-500",
-  tenant_moveout: "border-l-green-500",
-  downsizing: "border-l-purple-500",
+  estate_cleanout: "border-l-chart-2",
+  presale_clearout: "border-l-chart-1",
+  tenant_moveout: "border-l-chart-3",
+  downsizing: "border-l-chart-4",
 };
+const SERVICE_ACCENT_FALLBACK = "border-l-primary/45";
 
 const stageDroppableId = (stage: string) => `stage:${stage}` as const;
 
@@ -102,7 +105,7 @@ function KanbanDraggableProjectCard({
     <div ref={setNodeRef} style={style} {...listeners} {...attributes} className="touch-none">
       <Link href={`/projects/${project.id}`} className="block outline-none">
         <div
-          className={`cursor-grab rounded-md border bg-background p-3 text-sm shadow-sm transition-colors hover:bg-muted/50 active:cursor-grabbing border-l-4 ${SERVICE_COLORS[project.service_type] ?? ""}`}
+          className={`cursor-grab rounded-md border border-border/80 bg-background p-3 text-sm shadow-sm transition-colors hover:border-border hover:bg-accent/25 active:cursor-grabbing border-l-[3px] ${SERVICE_COLORS[project.service_type] ?? SERVICE_ACCENT_FALLBACK}`}
         >
           <p className="font-medium truncate">{project.client_name ?? "—"}</p>
           <p className="text-muted-foreground text-xs truncate">
@@ -137,9 +140,9 @@ function KanbanStageColumn({
 
   return (
     <div
-      className={`flex h-full min-h-0 shrink-0 flex-col rounded-lg border bg-muted transition-[width] duration-300 ease-in-out ${isCollapsed ? "w-12" : "w-72"}`}
+      className={`flex h-full min-h-0 shrink-0 flex-col rounded-lg border border-border/70 bg-card shadow-[var(--shadow-xs)] transition-[width] duration-300 ease-in-out dark:bg-muted ${isCollapsed ? "w-12" : "w-72"}`}
     >
-      <div className="flex shrink-0 items-center justify-between gap-1 border-b bg-muted px-2 py-2">
+      <div className="flex shrink-0 items-center justify-between gap-1 border-b border-border/50 bg-muted/25 px-2 py-2 dark:bg-background/35">
         {isCollapsed ? (
           <div className="flex flex-1 flex-col items-center gap-0.5">
             <p className="text-[10px] font-semibold uppercase leading-tight text-muted-foreground [writing-mode:vertical-rl] [text-orientation:mixed]">
@@ -188,7 +191,7 @@ function KanbanStageColumn({
       </div>
       <div
         ref={setNodeRef}
-        className={`min-h-0 flex-1 bg-muted transition-colors ${isCollapsed ? "min-h-[4rem]" : "space-y-2 overflow-y-auto p-2"} ${isOver ? "bg-primary/10 ring-2 ring-inset ring-primary/25" : ""}`}
+        className={`min-h-0 flex-1 bg-muted/20 transition-colors ${isCollapsed ? "min-h-[4rem]" : "space-y-2 overflow-y-auto p-2"} ${isOver ? "bg-primary/10 ring-2 ring-inset ring-primary/25" : ""}`}
       >
         {!isCollapsed &&
           items.map((p) => (
@@ -557,7 +560,7 @@ export default function ProjectsPage() {
               <DragOverlay dropAnimation={{ duration: 200, easing: "ease" }}>
                 {activeDragProject ? (
                   <div
-                    className={`pointer-events-none w-72 cursor-grabbing rounded-md border bg-background p-3 text-sm shadow-lg border-l-4 ${SERVICE_COLORS[activeDragProject.service_type] ?? ""}`}
+                    className={`pointer-events-none w-72 cursor-grabbing rounded-md border border-border/80 bg-background p-3 text-sm shadow-lg border-l-[3px] ${SERVICE_COLORS[activeDragProject.service_type] ?? SERVICE_ACCENT_FALLBACK}`}
                   >
                     <p className="font-medium truncate">{activeDragProject.client_name ?? "—"}</p>
                     <p className="text-muted-foreground text-xs truncate">

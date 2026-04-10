@@ -183,63 +183,67 @@ function ContactMobileRow({
 
   return (
     <div className="rounded-lg border border-border/80 bg-card text-card-foreground shadow-sm">
-      <div className="flex gap-2 p-3">
-        <button
-          type="button"
-          aria-expanded={expanded}
-          aria-label={expanded ? "Collapse details" : "Expand details"}
-          onClick={() => setExpanded((v) => !v)}
-          className="mt-0.5 shrink-0 rounded-md p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          <ChevronDown className={cn("size-5 transition-transform duration-200", expanded && "rotate-180")} />
-        </button>
-        <div className="min-w-0 flex-1 space-y-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge variant={STATUS_BADGE[contact.status] ?? "secondary"} className="shrink-0">
-              {STATUS_LABEL[contact.status] ?? contact.status}
-            </Badge>
-            <Link href={`/contacts/${contact.id}`} className="min-w-0 font-medium text-primary hover:underline">
-              <span className="block truncate">
-                {contact.first_name} {contact.last_name}
-              </span>
-            </Link>
-          </div>
-          {subtitle ? <p className="truncate text-xs text-muted-foreground">{subtitle}</p> : null}
-          {contact.email ? (
-            <div className="flex min-w-0 items-center gap-1">
-              <button
-                type="button"
-                onClick={() => copyEmail(contact.email!, contact.id)}
-                title="Copy email"
-                className="min-w-0 flex-1 cursor-pointer truncate text-left text-sm text-muted-foreground hover:text-foreground hover:underline focus:outline-none focus:underline"
-              >
-                {contact.email}
-              </button>
-              <div className="flex shrink-0 items-center gap-0.5">
+      <div className="p-3">
+        <div className="flex gap-2">
+          <div className="min-w-0 flex-1 space-y-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge variant={STATUS_BADGE[contact.status] ?? "secondary"} className="shrink-0">
+                {STATUS_LABEL[contact.status] ?? contact.status}
+              </Badge>
+              <Link href={`/contacts/${contact.id}`} className="min-w-0 font-medium text-primary hover:underline">
+                <span className="block truncate">
+                  {contact.first_name} {contact.last_name}
+                </span>
+              </Link>
+            </div>
+            {subtitle ? <p className="truncate text-xs text-muted-foreground">{subtitle}</p> : null}
+            {contact.email ? (
+              <div className="flex min-w-0 items-center gap-1">
                 <button
                   type="button"
                   onClick={() => copyEmail(contact.email!, contact.id)}
                   title="Copy email"
-                  className="inline-flex rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground focus:outline-none"
+                  className="min-w-0 flex-1 cursor-pointer truncate text-left text-sm text-muted-foreground hover:text-foreground hover:underline focus:outline-none focus:underline"
                 >
-                  {copiedId === contact.id ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
+                  {contact.email}
                 </button>
-                <a
-                  href={`https://mail.google.com/mail/?view=cm&to=${encodeURIComponent(contact.email)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  title="Open in Gmail"
-                  className="inline-flex rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
-                >
-                  <Mail className="h-4 w-4" />
-                </a>
+                <div className="flex shrink-0 items-center gap-0.5">
+                  <button
+                    type="button"
+                    onClick={() => copyEmail(contact.email!, contact.id)}
+                    title="Copy email"
+                    className="inline-flex rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground focus:outline-none"
+                  >
+                    {copiedId === contact.id ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
+                  </button>
+                  <a
+                    href={`https://mail.google.com/mail/?view=cm&to=${encodeURIComponent(contact.email)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="Open in Gmail"
+                    className="inline-flex rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                  >
+                    <Mail className="h-4 w-4" />
+                  </a>
+                </div>
               </div>
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground">No email</p>
-          )}
+            ) : (
+              <p className="text-sm text-muted-foreground">No email</p>
+            )}
+          </div>
+          <ContactActionsMenu contact={contact} copyEmail={copyEmail} onRequestDelete={onRequestDelete} />
         </div>
-        <ContactActionsMenu contact={contact} copyEmail={copyEmail} onRequestDelete={onRequestDelete} />
+        <div className="mt-2 flex justify-end">
+          <button
+            type="button"
+            aria-expanded={expanded}
+            aria-label={expanded ? "Collapse details" : "Expand details"}
+            onClick={() => setExpanded((v) => !v)}
+            className="shrink-0 rounded-md p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <ChevronDown className={cn("size-5 transition-transform duration-200", expanded && "rotate-180")} />
+          </button>
+        </div>
       </div>
       {expanded ? (
         <div className="space-y-3 border-t border-border/80 bg-muted/30 px-3 py-3 text-sm">

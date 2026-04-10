@@ -29,7 +29,7 @@ export async function GET(request: Request) {
     .select(`
       id, client_id, service_type, property_size, property_address, neighbourhood,
       stage, walkthrough_date, job_date, start_time, quote_amount, invoice_amount, payment_received,
-      created_at, archived_at,
+      created_at, archived_at, pinned,
       clients!inner(first_name, last_name, archived_at)
     `, { count: "exact" })
     .is("archived_at", null)
