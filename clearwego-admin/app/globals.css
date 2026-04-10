@@ -149,4 +149,36 @@
   html {
     font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
   }
+
+  /* Tiptap task lists (Notion-style checkboxes) */
+  .tiptap-root ul[data-type="taskList"] {
+    list-style: none;
+    padding: 0;
+    margin: 0.75em 0;
+  }
+  .tiptap-root li[data-type="taskItem"] {
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-start;
+  }
+  .tiptap-root li[data-type="taskItem"] > label {
+    flex: 0 0 auto;
+    margin-top: 0.2em;
+    user-select: none;
+  }
+  .tiptap-root li[data-type="taskItem"] > div {
+    flex: 1 1 auto;
+  }
+
+  /* Notion-style empty line placeholder (cursor row) */
+  .tiptap-root .ProseMirror p.is-editor-empty::before {
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    pointer-events: none;
+    color: var(--muted-foreground);
+    font-size: 0.9375rem;
+    line-height: 1.625;
+    font-weight: 400;
+  }
 }
