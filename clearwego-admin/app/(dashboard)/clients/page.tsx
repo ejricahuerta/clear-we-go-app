@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -39,7 +39,7 @@ type Client = {
   created_at: string;
 };
 
-export default function ClientsPage() {
+function ClientsPageContent() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -196,5 +196,15 @@ export default function ClientsPage() {
 
       <AddClientDrawer open={addOpen} onOpenChange={setAddOpen} onSuccess={refresh} />
     </div>
+  );
+}
+
+export default function ClientsPage() {
+  return (
+    <Suspense
+      fallback={<LoadingSpinner className="min-h-[200px]" message="Loading…" />}
+    >
+      <ClientsPageContent />
+    </Suspense>
   );
 }

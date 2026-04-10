@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -283,7 +283,7 @@ function ContactMobileRow({
   );
 }
 
-export default function ContactsPage() {
+function ContactsPageContent() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -600,5 +600,15 @@ export default function ContactsPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function ContactsPage() {
+  return (
+    <Suspense
+      fallback={<LoadingSpinner className="min-h-[200px]" message="Loading…" />}
+    >
+      <ContactsPageContent />
+    </Suspense>
   );
 }

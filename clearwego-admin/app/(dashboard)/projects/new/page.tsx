@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -15,10 +15,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { UserPlus } from "lucide-react";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 type Client = { id: string; first_name: string; last_name: string };
 
-export default function NewProjectPage() {
+function NewProjectPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const clientIdFromUrl = searchParams.get("clientId")?.trim() ?? "";
@@ -153,5 +154,15 @@ export default function NewProjectPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function NewProjectPage() {
+  return (
+    <Suspense
+      fallback={<LoadingSpinner className="min-h-[200px]" message="Loading…" />}
+    >
+      <NewProjectPageContent />
+    </Suspense>
   );
 }
