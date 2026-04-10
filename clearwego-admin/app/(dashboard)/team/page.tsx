@@ -1,17 +1,31 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export default function TeamPage() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const nameInputRef = useRef<HTMLInputElement>(null);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get("invite") !== "1") return;
+    nameInputRef.current?.focus();
+    const next = new URLSearchParams(searchParams.toString());
+    next.delete("invite");
+    const qs = next.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  }, [searchParams, pathname, router]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -38,7 +52,7 @@ export default function TeamPage() {
   }
 
   return (
-    <div className="p-6 max-w-lg">
+    <div className="p-6 max-w-lg" id="team-invite">
       <Card>
         <CardHeader>
           <CardTitle>Team</CardTitle>
@@ -49,6 +63,7 @@ export default function TeamPage() {
             <div className="space-y-2">
               <Label htmlFor="name">Crew member&apos;s name</Label>
               <Input
+                ref={nameInputRef}
                 id="name"
                 type="text"
                 value={name}

@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/select";
 
 const CONTACT_TYPES = ["estate_lawyer", "realtor", "property_manager", "other"] as const;
-const FOUND_VIA = ["apollo", "linkedin", "realtor_ca", "lsoo", "referral", "other"] as const;
+const FOUND_VIA = ["apollo", "linkedin", "realtor_ca", "lsoo", "quo", "referral", "other"] as const;
 
 function formatOptionLabel(key: string) {
   return key

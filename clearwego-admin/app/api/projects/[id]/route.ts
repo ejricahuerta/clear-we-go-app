@@ -1,10 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
+import { PROJECT_STAGES } from "@/lib/projects/stages";
 import { NextResponse } from "next/server";
 
-const STAGES = [
-  "inquiry", "walkthrough_booked", "quoted", "deposit_received",
-  "scheduled", "in_progress", "cleared", "report_sent", "review_requested", "closed",
-] as const;
+const STAGES = PROJECT_STAGES;
 const EDITABLE_KEYS = [
   "property_size", "property_address", "neighbourhood", "walkthrough_date", "walkthrough_method",
   "job_date", "start_time", "quote_amount", "deposit_received", "deposit_amount",

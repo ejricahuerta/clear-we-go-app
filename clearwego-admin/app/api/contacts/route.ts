@@ -1,9 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
-const CONTACT_STATUSES = ["new", "contacted", "responded", "converted", "dead"] as const;
+const CONTACT_STATUSES = ["new", "contacted", "responded", "client", "archived", "reopened"] as const;
 const CONTACT_TYPES = ["estate_lawyer", "realtor", "property_manager", "other"] as const;
-const FOUND_VIA = ["apollo", "linkedin", "realtor_ca", "lsoo", "referral", "other"] as const;
+const FOUND_VIA = ["apollo", "linkedin", "realtor_ca", "lsoo", "quo", "referral", "other"] as const;
 
 export async function GET(request: Request) {
   const supabase = await createClient();
@@ -26,15 +26,20 @@ export async function GET(request: Request) {
 
   let query = supabase
     .from("contacts")
-    .select("id, first_name, last_name, company, type, email, phone, neighbourhood, found_via, status, email_1_sent, email_2_sent, email_3_sent, last_contacted_date, follow_up_date, converted_to_client, created_at", { count: "exact" });
+    .select(
+      "id, first_name, last_name, company, type, email, phone, neighbourhood, found_via, status, email_1_sent, email_2_sent, email_3_sent, last_contacted_date, follow_up_date, converted_to_client, client_id, created_at, archived_at",
+      { count: "exact" }
+    );
 
   if (view === "follow_up") {
-    query = query.eq("follow_up_date", new Date().toISOString().slice(0, 10)).in("status", ["new", "contacted"]);
+    query = query
+      .eq("follow_up_date", new Date().toISOString().slice(0, 10))
+      .in("status", ["new", "contacted", "reopened"]);
   } else if (view === "no_response") {
     const fiveDaysAgo = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString();
     query = query
       .eq("email_1_sent", true)
-      .in("status", ["new", "contacted"])
+      .in("status", ["new", "contacted", "reopened"])
       .or(`last_contacted_date.lte.${fiveDaysAgo},last_contacted_date.is.null`);
   } else if (view === "responded") {
     query = query.eq("status", "responded").eq("converted_to_client", false);
@@ -74,7 +79,7 @@ export async function GET(request: Request) {
   return NextResponse.json({ contacts: contacts ?? [], total: count ?? 0, page, pageSize });
 }
 const CONTACT_SELECT =
-  "id, first_name, last_name, company, type, email, phone, neighbourhood, found_via, status, email_1_sent, email_2_sent, email_3_sent, last_contacted_date, follow_up_date, converted_to_client, created_at";
+  "id, first_name, last_name, company, type, email, phone, neighbourhood, found_via, status, email_1_sent, email_2_sent, email_3_sent, last_contacted_date, follow_up_date, converted_to_client, client_id, created_at, archived_at";
 
 export async function POST(request: Request) {
   const supabase = await createClient();

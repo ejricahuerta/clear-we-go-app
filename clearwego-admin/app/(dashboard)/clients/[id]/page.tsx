@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,7 +36,18 @@ import {
 } from "@/components/ui/empty";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { ChevronRight, FolderOpen, History } from "lucide-react";
+import { CLIENT_STATUSES, CLIENT_STATUS_LABELS } from "@/lib/clients/status";
+import { PROJECT_SERVICE_TYPES } from "@/lib/projects/insert-with-checklist";
 
 type Client = {
   id: string;
@@ -51,7 +62,13 @@ type Client = {
   sms_opted_out: boolean;
   google_review_received: boolean;
   notes: string | null;
+  status: string;
+  quote_amount: number | null;
+  pending_property_address: string | null;
+  pending_service_type: string | null;
+  quo_contact_id: string | null;
   created_at: string;
+  archived_at: string | null;
 };
 
 type Project = {
@@ -65,6 +82,7 @@ type Project = {
   payment_received: boolean;
   job_date: string | null;
   created_at: string;
+  archived_at: string | null;
 };
 
 type TimelineEvent = {
@@ -127,6 +145,7 @@ const CLIENT_TYPES = [
 
 export default function ClientProfilePage() {
   const params = useParams();
+  const router = useRouter();
   const id = params.id as string;
   const [client, setClient] = useState<Client | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -140,6 +159,9 @@ export default function ClientProfilePage() {
   const [addNoteOpen, setAddNoteOpen] = useState(false);
   const [newNote, setNewNote] = useState("");
   const [addingNote, setAddingNote] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteConfirmName, setDeleteConfirmName] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   const load = useCallback(() => {
     Promise.all([
@@ -162,6 +184,11 @@ export default function ClientProfilePage() {
           sms_opted_out: clientData.sms_opted_out ?? false,
           google_review_received: clientData.google_review_received ?? false,
           notes: clientData.notes,
+          status: clientData.status ?? "inquiry",
+          quote_amount: clientData.quote_amount ?? null,
+          pending_property_address: clientData.pending_property_address ?? null,
+          pending_service_type: clientData.pending_service_type ?? null,
+          quo_contact_id: clientData.quo_contact_id ?? null,
         });
         setProjects(projectsData.projects ?? []);
         setTotalRevenue(projectsData.totalRevenue ?? 0);
@@ -188,6 +215,24 @@ export default function ClientProfilePage() {
       })
       .catch(console.error)
       .finally(() => setSaving(false));
+  };
+
+  const displayFullName = client ? `${client.first_name} ${client.last_name}`.trim() : "";
+  const deleteNameMatches =
+    deleteConfirmName.trim().toLowerCase() === displayFullName.toLowerCase();
+
+  const handlePermanentDelete = () => {
+    if (!deleteNameMatches) return;
+    setDeleting(true);
+    fetch(`/api/clients/${id}`, { method: "DELETE" })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.error) throw new Error(data.error);
+        setDeleteOpen(false);
+        router.push("/clients");
+      })
+      .catch(console.error)
+      .finally(() => setDeleting(false));
   };
 
   const handleAddNote = () => {
@@ -272,9 +317,33 @@ export default function ClientProfilePage() {
     return acc;
   }, {});
 
+  const isArchived = client.archived_at != null;
+
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-semibold mb-6">{client.first_name} {client.last_name}</h1>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between mb-6">
+        <h1 className="text-2xl font-semibold">
+          {client.first_name} {client.last_name}
+        </h1>
+        {!isArchived ? (
+          <div className="flex w-full shrink-0 flex-wrap gap-2 justify-start sm:w-auto sm:justify-end">
+            <Button variant="outline" size="sm" type="button" onClick={() => setAddNoteOpen(true)}>
+              Add note
+            </Button>
+            <Button size="sm" asChild>
+              <Link href={`/projects/new?clientId=${id}`}>New project</Link>
+            </Button>
+          </div>
+        ) : null}
+      </div>
+      {isArchived ? (
+        <div
+          className="mb-6 rounded-lg border border-amber-500/40 bg-amber-50 px-4 py-3 text-sm text-amber-950 dark:bg-amber-950/30 dark:text-amber-100"
+          role="status"
+        >
+          This client is archived: they do not appear on the main client list. Projects and timeline below are unchanged.
+        </div>
+      ) : null}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_minmax(320px,400px)] gap-6 items-start">
         <div className="space-y-6 min-w-0">
       <Card>
@@ -336,12 +405,100 @@ export default function ClientProfilePage() {
                 <Label htmlFor="google_review_received" className="font-normal">Google review received</Label>
               </div>
             </div>
-            <div className="sm:col-span-2 space-y-2">
-              <Label>Notes</Label>
-              <Textarea value={form.notes ?? ""} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value || null }))} rows={3} />
-            </div>
           </div>
           <Button onClick={handleSave} loading={saving}>{saving ? "Saving…" : "Save changes"}</Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Sales funnel</CardTitle>
+          <CardDescription>
+            Pre-job stages live on the client. When status becomes <strong>Deposit received</strong>, a project is
+            auto-created if pending service type and property address are set; otherwise the timeline reminds you to add
+            them.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2 sm:col-span-2">
+              <Label>Funnel status</Label>
+              <Select
+                value={form.status ?? "inquiry"}
+                onValueChange={(v) => setForm((f) => ({ ...f, status: v }))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {CLIENT_STATUSES.map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {CLIENT_STATUS_LABELS[s]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Quote amount (pre-project)</Label>
+              <Input
+                type="number"
+                step="0.01"
+                min={0}
+                placeholder="—"
+                value={form.quote_amount != null ? String(form.quote_amount) : ""}
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  setForm((f) => ({
+                    ...f,
+                    quote_amount: raw === "" ? null : Number.isNaN(parseFloat(raw)) ? f.quote_amount : parseFloat(raw),
+                  }));
+                }}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Pending service (for auto-project)</Label>
+              <Select
+                value={form.pending_service_type ?? "__empty__"}
+                onValueChange={(v) =>
+                  setForm((f) => ({ ...f, pending_service_type: v === "__empty__" ? null : v }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="—" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__empty__">—</SelectItem>
+                  {PROJECT_SERVICE_TYPES.map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {s.replace(/_/g, " ")}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2 sm:col-span-2">
+              <Label>Pending property address</Label>
+              <Input
+                value={form.pending_property_address ?? ""}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, pending_property_address: e.target.value || null }))
+                }
+                placeholder="Used when creating a project from deposit"
+              />
+            </div>
+            <div className="space-y-2 sm:col-span-2">
+              <Label>Quo contact id (optional)</Label>
+              <Input
+                value={form.quo_contact_id ?? ""}
+                onChange={(e) => setForm((f) => ({ ...f, quo_contact_id: e.target.value.trim() || null }))}
+                placeholder="OpenPhone / Quo contact id"
+              />
+            </div>
+          </div>
+          <Button onClick={handleSave} loading={saving} variant="secondary">
+            {saving ? "Saving…" : "Save funnel"}
+          </Button>
         </CardContent>
       </Card>
 
@@ -361,7 +518,7 @@ export default function ClientProfilePage() {
                 <EmptyDescription>Create a project from the Projects page.</EmptyDescription>
               </EmptyHeader>
               <EmptyContent>
-                <Link href="/projects/new">
+                <Link href={`/projects/new?clientId=${id}`}>
                   <Button variant="outline" size="sm">New project</Button>
                 </Link>
               </EmptyContent>
@@ -388,6 +545,11 @@ export default function ClientProfilePage() {
                         <Badge variant="secondary" className="max-w-full shrink font-normal capitalize">
                           <span className="truncate">{p.stage.replace(/_/g, " ")}</span>
                         </Badge>
+                        {p.archived_at != null ? (
+                          <Badge variant="outline" className="shrink-0 text-muted-foreground">
+                            Archived
+                          </Badge>
+                        ) : null}
                       </div>
                       <p className="text-sm leading-snug text-muted-foreground break-words">
                         {p.property_address?.trim() || "—"}
@@ -410,14 +572,23 @@ export default function ClientProfilePage() {
       </Card>
 
         </div>
-        <div className="lg:sticky lg:top-6">
+        <div className="flex min-w-0 flex-col gap-6">
+          <div className="lg:sticky lg:top-6 lg:z-10">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle className="text-base">Timeline</CardTitle>
                 <CardDescription>Filter and search events</CardDescription>
               </div>
-              <Button variant="outline" size="sm" onClick={() => setAddNoteOpen(true)}>Add note</Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="hidden lg:inline-flex"
+                type="button"
+                onClick={() => setAddNoteOpen(true)}
+              >
+                Add note
+              </Button>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -490,8 +661,64 @@ export default function ClientProfilePage() {
               )}
             </CardContent>
           </Card>
+          </div>
+
+          <Card className="border-destructive/40">
+            <CardHeader>
+              <CardTitle className="text-base text-destructive">Danger zone</CardTitle>
+              <CardDescription>
+                Permanently delete this client and all of their projects and timeline history. This cannot be undone. The
+                linked contact will be marked Closed.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button variant="destructive" size="sm" onClick={() => { setDeleteConfirmName(""); setDeleteOpen(true); }}>
+                Permanently delete client
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       </div>
+
+      <AlertDialog
+        open={deleteOpen}
+        onOpenChange={(o) => {
+          if (!o && !deleting) {
+            setDeleteOpen(false);
+            setDeleteConfirmName("");
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Permanently delete client?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 text-left">
+                <p>
+                  All projects and timeline events for this client will be deleted. The linked contact will be marked{" "}
+                  <strong>Closed</strong>.
+                </p>
+                <p className="text-sm">
+                  Type <strong>{displayFullName}</strong> to confirm.
+                </p>
+                <Input
+                  value={deleteConfirmName}
+                  onChange={(e) => setDeleteConfirmName(e.target.value)}
+                  placeholder="Full name"
+                  autoComplete="off"
+                  disabled={deleting}
+                />
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <Button variant="destructive" disabled={deleting || !deleteNameMatches} onClick={handlePermanentDelete}>
+              {deleting ? "Deleting…" : "Delete permanently"}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Dialog open={addNoteOpen} onOpenChange={setAddNoteOpen}>
         <DialogContent className="sm:max-w-md">

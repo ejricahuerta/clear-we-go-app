@@ -2,18 +2,20 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
   TableBody,
@@ -36,11 +38,14 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { Mail, Copy, Check, SearchX, ChevronDown, MoreHorizontal, UserPlus } from "lucide-react";
 import { AddContactDialog } from "@/components/contacts/add-contact-dialog";
+import { ImportContactsDialog } from "@/components/contacts/import-contacts-dialog";
+import { DeleteContactDialog, type DeleteContactTarget } from "@/components/contacts/delete-contact-dialog";
 
 type View = "all" | "follow_up" | "no_response" | "responded";
 
@@ -61,6 +66,7 @@ type Contact = {
   last_contacted_date: string | null;
   follow_up_date: string | null;
   converted_to_client: boolean;
+  client_id: string | null;
   created_at: string;
 };
 
@@ -68,31 +74,54 @@ const STATUS_BADGE: Record<string, "secondary" | "default" | "outline" | "destru
   new: "secondary",
   contacted: "default",
   responded: "default",
-  converted: "outline",
-  dead: "destructive",
+  client: "outline",
+  archived: "destructive",
+  reopened: "default",
 };
 
 const STATUS_LABEL: Record<string, string> = {
   new: "New",
   contacted: "Contacted",
   responded: "Responded",
-  converted: "Converted",
-  dead: "Closed",
+  client: "Client",
+  archived: "Archived",
+  reopened: "Reopened",
 };
 
 const VIEW_LABELS: Record<View, string> = {
-  all: "All Contacts",
-  follow_up: "Follow Up Today",
-  no_response: "No Response",
-  responded: "Responded",
+  all: "All contacts",
+  follow_up: "Follow up today",
+  no_response: "No response",
+  responded: "Responded (pipeline)",
+};
+
+const STATUS_FILTER_OPTIONS = [
+  { value: "new", label: "New" },
+  { value: "contacted", label: "Contacted" },
+  { value: "responded", label: "Responded" },
+  { value: "client", label: "Client" },
+  { value: "archived", label: "Archived" },
+  { value: "reopened", label: "Reopened" },
+] as const;
+
+const FOUND_VIA_LABEL: Record<string, string> = {
+  apollo: "Apollo",
+  linkedin: "LinkedIn",
+  realtor_ca: "Realtor.ca",
+  lsoo: "LSOO",
+  quo: "Quo",
+  referral: "Referral",
+  other: "Other",
 };
 
 function ContactActionsMenu({
   contact,
   copyEmail,
+  onRequestDelete,
 }: {
   contact: Contact;
   copyEmail: (email: string, id: string) => void;
+  onRequestDelete: (c: Contact) => void;
 }) {
   return (
     <DropdownMenu>
@@ -109,10 +138,7 @@ function ContactActionsMenu({
         </DropdownMenuItem>
         {contact.email ? (
           <>
-            <DropdownMenuItem
-              className="cursor-pointer"
-              onSelect={() => copyEmail(contact.email!, contact.id)}
-            >
+            <DropdownMenuItem className="cursor-pointer" onSelect={() => copyEmail(contact.email!, contact.id)}>
               Copy email
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
@@ -127,6 +153,13 @@ function ContactActionsMenu({
             </DropdownMenuItem>
           </>
         ) : null}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          className="cursor-pointer text-destructive focus:text-destructive"
+          onSelect={() => onRequestDelete(contact)}
+        >
+          Delete contact
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -137,11 +170,13 @@ function ContactMobileRow({
   copiedId,
   copyEmail,
   formatDate,
+  onRequestDelete,
 }: {
   contact: Contact;
   copiedId: string | null;
   copyEmail: (email: string, id: string) => void;
   formatDate: (d: string | null) => string;
+  onRequestDelete: (c: Contact) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const subtitle = [contact.type?.replace(/_/g, " "), contact.company].filter(Boolean).join(" · ");
@@ -163,18 +198,13 @@ function ContactMobileRow({
             <Badge variant={STATUS_BADGE[contact.status] ?? "secondary"} className="shrink-0">
               {STATUS_LABEL[contact.status] ?? contact.status}
             </Badge>
-            <Link
-              href={`/contacts/${contact.id}`}
-              className="min-w-0 font-medium text-primary hover:underline"
-            >
+            <Link href={`/contacts/${contact.id}`} className="min-w-0 font-medium text-primary hover:underline">
               <span className="block truncate">
                 {contact.first_name} {contact.last_name}
               </span>
             </Link>
           </div>
-          {subtitle ? (
-            <p className="truncate text-xs text-muted-foreground">{subtitle}</p>
-          ) : null}
+          {subtitle ? <p className="truncate text-xs text-muted-foreground">{subtitle}</p> : null}
           {contact.email ? (
             <div className="flex min-w-0 items-center gap-1">
               <button
@@ -192,11 +222,7 @@ function ContactMobileRow({
                   title="Copy email"
                   className="inline-flex rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground focus:outline-none"
                 >
-                  {copiedId === contact.id ? (
-                    <Check className="h-4 w-4 text-green-600" />
-                  ) : (
-                    <Copy className="h-4 w-4" />
-                  )}
+                  {copiedId === contact.id ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
                 </button>
                 <a
                   href={`https://mail.google.com/mail/?view=cm&to=${encodeURIComponent(contact.email)}`}
@@ -213,7 +239,7 @@ function ContactMobileRow({
             <p className="text-sm text-muted-foreground">No email</p>
           )}
         </div>
-        <ContactActionsMenu contact={contact} copyEmail={copyEmail} />
+        <ContactActionsMenu contact={contact} copyEmail={copyEmail} onRequestDelete={onRequestDelete} />
       </div>
       {expanded ? (
         <div className="space-y-3 border-t border-border/80 bg-muted/30 px-3 py-3 text-sm">
@@ -229,7 +255,9 @@ function ContactMobileRow({
             <div className="grid grid-cols-[6.5rem_1fr] gap-2">
               <dt className="text-muted-foreground">Found via</dt>
               <dd className="min-w-0 break-words">
-                {contact.found_via ? contact.found_via.replace(/_/g, " ") : "—"}
+                {contact.found_via
+                  ? (FOUND_VIA_LABEL[contact.found_via] ?? contact.found_via.replace(/_/g, " "))
+                  : "—"}
               </dd>
             </div>
             <div className="grid grid-cols-[6.5rem_1fr] gap-2">
@@ -245,7 +273,7 @@ function ContactMobileRow({
               <dd className="text-xs text-muted-foreground">
                 1: {contact.email_1_sent ? "Sent" : "—"} · 2: {contact.email_2_sent ? "Sent" : "—"} · 3:{" "}
                 {contact.email_3_sent ? "Sent" : "—"}
-                {contact.converted_to_client ? " · Converted" : ""}
+                {contact.converted_to_client ? " · Client" : ""}
               </dd>
             </div>
           </dl>
@@ -256,8 +284,10 @@ function ContactMobileRow({
 }
 
 export default function ContactsPage() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [view, setView] = useState<View>("all");
-  const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [total, setTotal] = useState(0);
@@ -267,7 +297,19 @@ export default function ContactsPage() {
   const pageSizeOptions = [10, 20, 50, 100];
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [addContactOpen, setAddContactOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+  const [search, setSearch] = useState("");
   const [listVersion, setListVersion] = useState(0);
+  const [deleteTarget, setDeleteTarget] = useState<DeleteContactTarget | null>(null);
+
+  useEffect(() => {
+    if (searchParams.get("add") !== "1") return;
+    setAddContactOpen(true);
+    const next = new URLSearchParams(searchParams.toString());
+    next.delete("add");
+    const qs = next.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  }, [searchParams, pathname, router]);
 
   const copyEmail = (email: string, id: string) => {
     if (!email) return;
@@ -278,6 +320,7 @@ export default function ContactsPage() {
   };
 
   useEffect(() => {
+    setLoading(true);
     const params = new URLSearchParams();
     params.set("view", view);
     params.set("page", String(page));
@@ -298,21 +341,52 @@ export default function ContactsPage() {
 
   const formatDate = (d: string | null) => (d ? new Date(d).toLocaleDateString() : "-");
 
+  const handleListChange = (v: string) => {
+    const next = v as View;
+    if (next === "all" || next === "follow_up" || next === "no_response" || next === "responded") {
+      setView(next);
+      setStatusFilter("");
+      setPage(1);
+    }
+  };
+
+  const handleStatusFilterChange = (v: string) => {
+    if (v === "__any__") setStatusFilter("");
+    else setStatusFilter(v);
+    setPage(1);
+  };
+
+  const clearFilters = () => {
+    setSearch("");
+    setView("all");
+    setStatusFilter("");
+    setPage(1);
+  };
+
+  const openDelete = (c: Contact) => {
+    setDeleteTarget({
+      id: c.id,
+      first_name: c.first_name,
+      last_name: c.last_name,
+      client_id: c.client_id,
+    });
+  };
+
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6 p-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           <h1 className="text-2xl font-semibold">Contacts</h1>
-          <p className="text-muted-foreground text-sm mt-0.5">Track outreach and convert to clients</p>
+          <p className="mt-0.5 text-sm text-muted-foreground">Track outreach and convert to clients</p>
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-2">
           <Button type="button" onClick={() => setAddContactOpen(true)}>
             <UserPlus className="mr-2 h-4 w-4" />
             Add contact
           </Button>
-          <Link href="/contacts/import">
-            <Button variant="outline">Import CSV</Button>
-          </Link>
+          <Button type="button" variant="outline" onClick={() => setImportOpen(true)}>
+            Import CSV
+          </Button>
         </div>
       </div>
 
@@ -325,55 +399,76 @@ export default function ContactsPage() {
         }}
       />
 
+      <ImportContactsDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        onSuccess={() => {
+          setListVersion((v) => v + 1);
+          setPage(1);
+        }}
+      />
+
+      <DeleteContactDialog
+        contact={deleteTarget}
+        open={deleteTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
+        onDeleted={() => {
+          setListVersion((v) => v + 1);
+          setDeleteTarget(null);
+        }}
+        onArchived={() => {
+          setListVersion((v) => v + 1);
+          setDeleteTarget(null);
+        }}
+      />
+
       <Card>
-        <CardContent className="p-6 space-y-4">
-          <Tabs value={view} onValueChange={(v) => setView(v as View)}>
-            <div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-center md:justify-between">
-              <div className="min-w-0 md:hidden">
-                <Select value={view} onValueChange={(v) => setView(v as View)}>
-                  <SelectTrigger className="h-9 w-full">
-                    <SelectValue placeholder="View" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {(Object.keys(VIEW_LABELS) as View[]).map((v) => (
-                      <SelectItem key={v} value={v}>
-                        {VIEW_LABELS[v]}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <TabsList className="hidden w-full max-w-lg shrink-0 grid-cols-4 md:grid">
-                {(Object.keys(VIEW_LABELS) as View[]).map((v) => (
-                  <TabsTrigger key={v} value={v} className="px-2 sm:px-3">
-                    {VIEW_LABELS[v]}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-              <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-                <Select value={statusFilter || "__all__"} onValueChange={(v) => setStatusFilter(v === "__all__" ? "" : v)}>
-                  <SelectTrigger className="h-9 w-full sm:w-[10rem]">
-                    <SelectValue placeholder="All statuses" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__all__">All statuses</SelectItem>
-                    <SelectItem value="new">New</SelectItem>
-                    <SelectItem value="contacted">Contacted</SelectItem>
-                    <SelectItem value="responded">Responded</SelectItem>
-                    <SelectItem value="converted">Converted</SelectItem>
-                    <SelectItem value="dead">Closed</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Input
-                  type="search"
-                  placeholder="Search name, company, email..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="h-9 min-w-0 w-full sm:w-64"
-                />
-              </div>
-            </div>
-          </Tabs>
+        <CardContent className="space-y-4 p-6">
+          <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+            <Select value={view} onValueChange={handleListChange}>
+              <SelectTrigger className="h-9 w-full sm:w-[min(100%,14rem)]" aria-label="List filter">
+                <SelectValue placeholder="List" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>List</SelectLabel>
+                  {(Object.keys(VIEW_LABELS) as View[]).map((v) => (
+                    <SelectItem key={v} value={v}>
+                      {VIEW_LABELS[v]}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+            <Select value={statusFilter || "__any__"} onValueChange={handleStatusFilterChange}>
+              <SelectTrigger className="h-9 w-full sm:w-[min(100%,14rem)]" aria-label="Status filter">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Status</SelectLabel>
+                  <SelectItem value="__any__">Any status</SelectItem>
+                  {STATUS_FILTER_OPTIONS.map(({ value, label }) => (
+                    <SelectItem key={value} value={value}>
+                      {label}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+            <Input
+              type="search"
+              placeholder="Search name, company, email..."
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+              className="h-9 min-w-0 w-full sm:w-64"
+            />
+          </div>
 
           {loading ? (
             <LoadingSpinner className="min-h-[200px]" />
@@ -387,7 +482,7 @@ export default function ContactsPage() {
                 <EmptyDescription>Try adjusting your filters or search.</EmptyDescription>
               </EmptyHeader>
               <EmptyContent>
-                <Button variant="outline" onClick={() => { setSearch(""); setStatusFilter(""); setPage(1); }}>
+                <Button type="button" variant="outline" onClick={clearFilters}>
                   Clear filters
                 </Button>
               </EmptyContent>
@@ -402,6 +497,7 @@ export default function ContactsPage() {
                     copiedId={copiedId}
                     copyEmail={copyEmail}
                     formatDate={formatDate}
+                    onRequestDelete={openDelete}
                   />
                 ))}
               </div>
@@ -423,21 +519,23 @@ export default function ContactsPage() {
                     {contacts.map((c) => (
                       <TableRow key={c.id}>
                         <TableCell>
-                          <Badge variant={STATUS_BADGE[c.status] ?? "secondary"}>{STATUS_LABEL[c.status] ?? c.status}</Badge>
+                          <Badge variant={STATUS_BADGE[c.status] ?? "secondary"}>
+                            {STATUS_LABEL[c.status] ?? c.status}
+                          </Badge>
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-col gap-0.5">
                             <Link href={`/contacts/${c.id}`} className="font-medium text-primary hover:underline">
                               {c.first_name} {c.last_name}
                             </Link>
-                            {(c.type || c.company) ? (
+                            {c.type || c.company ? (
                               <span className="text-xs text-muted-foreground">
                                 {[c.type?.replace(/_/g, " "), c.company].filter(Boolean).join(" · ")}
                               </span>
                             ) : null}
                           </div>
                         </TableCell>
-                        <TableCell className="text-muted-foreground text-sm">
+                        <TableCell className="text-sm text-muted-foreground">
                           <div className="flex items-center justify-between gap-2">
                             {c.email ? (
                               <button
@@ -459,11 +557,7 @@ export default function ContactsPage() {
                                   title="Copy email"
                                   className="inline-flex rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground focus:outline-none"
                                 >
-                                  {copiedId === c.id ? (
-                                    <Check className="h-4 w-4 text-green-600" />
-                                  ) : (
-                                    <Copy className="h-4 w-4" />
-                                  )}
+                                  {copiedId === c.id ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
                                 </button>
                                 <a
                                   href={`https://mail.google.com/mail/?view=cm&to=${encodeURIComponent(c.email)}`}
@@ -481,7 +575,7 @@ export default function ContactsPage() {
                         <TableCell className="text-muted-foreground">{formatDate(c.last_contacted_date)}</TableCell>
                         <TableCell className="text-muted-foreground">{formatDate(c.follow_up_date)}</TableCell>
                         <TableCell className="text-right">
-                          <ContactActionsMenu contact={c} copyEmail={copyEmail} />
+                          <ContactActionsMenu contact={c} copyEmail={copyEmail} onRequestDelete={openDelete} />
                         </TableCell>
                       </TableRow>
                     ))}

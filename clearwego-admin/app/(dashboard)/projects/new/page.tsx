@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,11 +14,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { UserPlus } from "lucide-react";
 
 type Client = { id: string; first_name: string; last_name: string };
 
 export default function NewProjectPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const clientIdFromUrl = searchParams.get("clientId")?.trim() ?? "";
   const [clients, setClients] = useState<Client[]>([]);
   const [clientId, setClientId] = useState("");
   const [serviceType, setServiceType] = useState("estate_cleanout");
@@ -32,13 +35,17 @@ export default function NewProjectPage() {
       .then((r) => r.json())
       .then((data) => {
         if (data.error) throw new Error(data.error);
-        setClients(data.clients ?? []);
-        if (data.clients?.length) setClientId((prev) => prev || data.clients[0].id);
+        const list: Client[] = data.clients ?? [];
+        setClients(list);
+        const fromUrl = clientIdFromUrl;
+        if (fromUrl && list.some((c) => c.id === fromUrl)) {
+          setClientId(fromUrl);
+        } else if (list.length) {
+          setClientId(list[0].id);
+        }
       })
       .catch(() => setClients([]));
-    // Intentionally run once on mount to load clients and set initial selection
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [clientIdFromUrl]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,17 +87,33 @@ export default function NewProjectPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="client">Client</Label>
-              <Select value={clientId || "__empty__"} onValueChange={(v) => setClientId(v === "__empty__" ? "" : v)}>
-                <SelectTrigger id="client">
-                  <SelectValue placeholder="Select client" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="__empty__">Select client</SelectItem>
-                  {clients.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>{c.first_name} {c.last_name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex gap-2 items-center">
+                <div className="flex-1 min-w-0">
+                  <Select value={clientId || "__empty__"} onValueChange={(v) => setClientId(v === "__empty__" ? "" : v)}>
+                    <SelectTrigger id="client" className="w-full">
+                      <SelectValue placeholder="Select client" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__empty__">Select client</SelectItem>
+                      {clients.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>{c.first_name} {c.last_name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="shrink-0"
+                  asChild
+                  aria-label="Add client via contacts"
+                >
+                  <Link href="/contacts" title="Add client via contacts">
+                    <UserPlus className="h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="service_type">Service type</Label>
